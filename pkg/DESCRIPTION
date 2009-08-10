@@ -1,0 +1,8 @@
+Package: nicholsonppp
+Maintainer: Toby Dylan Hocking <toby.hocking@etu.upmc.fr>
+Author: Toby Dylan Hocking
+Version: 1.0
+License: GPL-3
+Title: Evolution simulation and classification
+Description: After measuring gene frequencies of modern populations that have a common ancestor, we estimate ancestral allele frequency and selection state for each gene. A bayesian model is used and verified using the included simulator.
+Depends: lattice, animation, grid, plyr
