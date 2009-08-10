@@ -23,12 +23,12 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
 
 <body>
 
-<!-- R-Forge Logo -->
+<!-- R-Forge Logo
 <table border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr><td>
 <a href="/"><img src="<?php echo $themeroot; ?>/images/logo.png" border="0" alt="R-Forge Logo" /> </a> </td> </tr>
 </table>
-
+ -->
 
 <!-- get project title  -->
 <!-- own website starts here, the following may be changed as you like -->
@@ -43,9 +43,10 @@ echo $contents; } ?>
 
 <!-- end of project description -->
 
-<p> No content added. </p>
+<h1>Animation summary of allele frequency evolution simulation</h1>
+<p><a href="both/index.htm"><img src="both/images/100.png" /></a></p>
 
-<p> The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
+<p>The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
 
 </body>
 </html>
