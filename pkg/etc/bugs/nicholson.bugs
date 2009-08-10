@@ -1,0 +1,18 @@
+model { 
+  ## Vraisemblance	
+  for(i in 1:I) { ## boucle sur les loci
+    for(j in 1:J) {## boucle sur les races
+      ## Réponse multinomiale
+      Y[i,j]~dbin(alpha[i,j],N[i,j])
+      alpha[i,j]~ dnorm(p[i],tau[i,j])I(0,1)
+      tau[i,j]<-1/(p[i]*(1-p[i])*c[j])
+    }
+  }
+  ##Hyper Paramètres
+  for(j in 1 :J) { 
+    c[j]~dunif(0,1)}
+  for(i in 1 :I) { 
+    ##p[i]~dbeta(0.1,0.1)
+    p[i]~dbeta(1,1)
+  }
+}
