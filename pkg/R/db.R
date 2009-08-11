@@ -1,48 +1,4 @@
 CEX.LEG <- 1
-fixation.endpoints <- function(lf,main="Loci are not always fixed for the same allele in each population",par.settings=list(),ancestral.color='black',hilite.locus=NULL,...){
-  par.default <- list(superpose.symbol=list(
-                        col=c(ancestral.color,'blue','turquoise','red'),
-                        pch=20))
-  for(N in names(par.settings))par.default[[N]] <- par.settings[[N]]
-  lf$ID <- reorder(lf$locus,lf$pi,median)
-  mydot.panel <- function(...,x,subscripts){
-    panel.xyplot(x=x,subscripts=subscripts,...)
-    S <- unique(lf[,c("locus","pi")])
-    if((!is.null(hilite.locus))&&hilite.locus%in%x)
-      panel.abline(v=which(S$locus[order(S$pi)]==hilite.locus))
-    if(length(x))grid.points(x,lf$pi[subscripts],pch=20,gp=gpar(col=ancestral.color,cex=0.5))
-  }
-  lf$T <- factor(paste(lf$type,format(lf$s)))
-  levs <- levels(lf$T)
-  ids <- rev(grep("BAL",levs))
-  levs <- levs[c(ids,(ids[1]+1):length(levs))]
-  lf$S <- factor(lf$T,levs)
-  latticeplot(alpha~ID|S,lf,dotplot,
-              alpha=1,
-              panel=mydot.panel,
-              auto.key=list(space='right',title="Population type",cex.title=CEX.LEG),
-              xlab="Locus (a dot is drawn for each population and locus)",
-              ylab="Simulated blue allele frequency",
-              ylim=c(0,1),
-              groups=color,
-              main=main,
-              par.settings=par.default,
-              scales=list(x=list(draw=F)),
-              layout=c(5,1),
-              strip=function(which.panel,factor.levels,bg,...){
-                d <- get("d",parent.frame(3))
-                cols <- get("usual.colors",parent.frame(3))
-                level <- gsub("[^A-Z]","",factor.levels[which.panel])
-                supcol <- which(level==levels(d$type))
-                strip.default(which.panel=which.panel,
-                              factor.levels=factor.levels,
-                              bg=cols[supcol],
-                              strip.names=c(T,T),
-                              strip.levels=c(T,T),
-                              ...)
-              },
-              ...)
-}
 ##debug(fixation.endpoints)
 display.params=c("populations",'loci','popsize','generations','p.neutral','fixed')
 deduce.param.label <- function(lt,imp){
