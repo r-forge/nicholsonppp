@@ -297,7 +297,7 @@ loci.over.time <- function
   ggplot(fr,aes(generation,simulated,group=population,colour=color))+
     geom_line()+
     facet_wrap(S~locus,nrow=1)+
-    scale_colour_manual(values=c("blue","turquoise","red"))+
+    scale_colour_manual(values=pop.colors)+
     labs(y="Simulated blue allele frequency",colour="Population color")+
     opts(title="Allele frequency evolution varies with selection type and population color")
 }
@@ -322,9 +322,10 @@ convert.df <- function(d,g){
   print(levels(d$locus))
   d
 }
+pop.colors <- c("blue","turquoise","red")
 fixation.endpoints <- function(lf,main="Loci are not always fixed for the same allele in each population",par.settings=list(),ancestral.color='black',hilite.locus=NULL,other.superpose.symbol=trellis.par.get('superpose.symbol'),...){
   par.default <- list(superpose.symbol=list(
-                        col=c(ancestral.color,'blue','turquoise','red'),
+                        col=c(ancestral.color,pop.colors),
                         pch=20))
   for(N in names(par.settings))par.default[[N]] <- par.settings[[N]]
   mydot.panel <- function(...,x,subscripts){
@@ -380,18 +381,33 @@ myanim <- function(f,tit,pfun){
 }
 
 
-anc.est.plot <- function(g){
-  est.df <- data.frame(estimate=rowMeans(fr[,,g]),d)
-  pp <- est.df[locus.to.hilite,]
-  pi.xyplot(estimate~f,est.df,alpha=1,
-            cols=usual.colors,
-            panel=function(...){
-              panel.xyplot(...)
-              lpoints(pp$f,pp$est,pch=1,cex=2,col="black")
-            },
-            xlab="Simulated blue allele frequency",
-            ylab="Estimated blue allele frequency",
-            main="Allele frequency estimates vary with selection type",
-            auto.key=list(space="right",title="Selection type",cex.title=CEX.LEG))
+selection.colors <- trellis.par.get("superpose.symbol")$col
+selection.colors[3] <- "green"
+selection.symbols <- c("B","N","P")
+anc.est.plot <- function(fr,hilite.locus=NULL,sub=deduce.param.label(fr)){
+  est.df <- ddply(fr,.(locus),summarise,ancestral.est=mean(simulated),ancestral=ancestral[1],type=type[1])
+  xyplot(ancestral.est~ancestral,est.df,
+         alpha=1,
+         cols=selection.colors,
+         groups=type,
+         panel=function(...){
+           panel.xyplot(...)
+           if(!is.null(hilite.locus)){
+             pp <- est.df[hilite.locus,]
+             lpoints(pp$ancestral,pp$ancestral.est,pch=1,cex=2,col="black")
+           }
+         },
+         par.settings=list(superpose.symbol=list(
+                             pch=selection.symbols,
+                             cex=1.2,
+                             col=selection.colors)),
+         sub=sub,
+         ylim=c(0,1),
+         xlim=c(0,1),
+         aspect=1,
+         xlab="Simulated blue allele frequency",
+         ylab="Estimated blue allele frequency",
+         main="Allele frequency estimates vary with selection type",
+         auto.key=list(space="right",title="Selection type",cex.title=CEX.LEG))
 }
-
+anc.est.plot(subset(sim$fin,generation==25),1)
