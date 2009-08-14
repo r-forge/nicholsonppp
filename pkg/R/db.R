@@ -1,12 +1,13 @@
 CEX.LEG <- 1
 ##debug(fixation.endpoints)
-display.params=c("populations",'loci','popsize','generations','p.neutral','fixed')
-deduce.param.label <- function(lt,imp){
-  L <- sapply(imp,function(cn)as.character(unique(lt[,cn])))
+display.params=c("populations",'loci.per.s.value','popsize','generations','p.neutral','fixed')
+deduce.param.label <- function(lt,imp=display.params){
+  L <- sapply(imp,function(cn)if(cn%in%names(lt))
+              {tmp <- unique(lt[,cn]);if(is.numeric(tmp))tmp <- round(tmp,digits=2);tmp} else NULL)
   lab <- paste(sapply(names(L),function(N)paste(N,
-                                         " : { ",
+                                         ": ",
                                          paste(L[[N]],collapse=", "),
-                                         " } ",
+                                         "  ",
                                          sep='')),
         collapse='')
   if(lab=="")return(NULL)
