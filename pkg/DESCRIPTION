@@ -5,4 +5,4 @@ Version: 1.0
 License: GPL-3
 Title: Evolution simulation and classification
 Description: After measuring gene frequencies of modern populations that have a common ancestor, we estimate ancestral allele frequency and selection state for each gene. A bayesian model is used and verified using the included simulator.
-Depends: lattice, animation, grid, plyr
+Depends: lattice, animation, grid, plyr, reshape, ggplot2
