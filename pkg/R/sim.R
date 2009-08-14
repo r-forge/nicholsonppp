@@ -173,25 +173,35 @@ simulate.drift.selection <- function
   ##         paste(subdir,'/',sep=''),show='png')
 
 
-  grab <- function(type){
-    thistype <- s$type==type
-    maxs <- max(s$s[thistype])
-    c(which(s$s==maxs & thistype & abs(F.init - 0.5) < 0.1)[1],
-      which(s$s==maxs & thistype & abs(F.init - 0.5) > 0.3 & abs(F.init - 0.5) < 0.4)[1])
-  }
-  big <- combine(lapply(c(grab("none"),posloci <- grab("positive"),grab("balancing")),to.df))
-  z <- merge(merge(big,s),poplong)
-  ##print(unique(z[,c('s','type')]))
-  vals <- unique(z$locus)
-  locus.to.hilite <- posloci[2]
-  map <- rep(1:(length(vals)/3),3)
-  names(map) <- vals
-  #IDEA source("/home/thocking/directlabels/pkg/latticedirectlabels/R/direct.labels.R");dl(xyplot,z,frequency~time|locus+type,population,method="last.points",type="l",plot.symbol='.')
-  z$fakelocus <- map[as.character(z$locus)]
-  zna <- ddply(z,.(population,locus,type),
-               function(d){
-                 rbind(d[sort(d$time,i=TRUE)$i,],
-                       {tmp <- d[1,];tmp$frequency <- NA;tmp})})
+  ##   grab <- function(type){
+  ##     thistype <- s$type==type
+  ##     maxs <- max(s$s[thistype])
+  ##     cond <- s$s==maxs & thistype
+  ##     c(which(cond & abs(F.init - 0.5) < 0.1)[1],
+  ##       which(cond & abs(F.init - 0.5) > 0.3 & abs(F.init - 0.5) < 0.4)[1])
+  ##   }
+  ##   browser()
+  ##   big <- combine(lapply(c(grab("none"),posloci <- grab("positive"),grab("balancing")),to.df))
+  ## reshaping the data for single allele frequency over time plots
+  ## to.df <- function(i){
+  ##   x <- data.frame(fr[i,,])
+  ##   names(x) <- paste('frequency',1:ncol(x),sep='.')
+  ##   y <- reshape(x,dir='long',varying=names(x),idvar="population")
+  ##   data.frame(y,locus=i)
+  ## }
+##   big <- something
+##   z <- merge(merge(big,s),poplong)
+##   ##print(unique(z[,c('s','type')]))
+##   vals <- unique(z$locus)
+##   locus.to.hilite <- posloci[2]
+##   map <- rep(1:(length(vals)/3),3)
+##   names(map) <- vals
+##   #IDEA source("/home/thocking/directlabels/pkg/latticedirectlabels/R/direct.labels.R");dl(xyplot,z,frequency~time|locus+type,population,method="last.points",type="l",plot.symbol='.')
+##   z$fakelocus <- map[as.character(z$locus)]
+##   zna <- ddply(z,.(population,locus,type),
+##                function(d){
+##                  rbind(d[sort(d$time,i=TRUE)$i,],
+##                        {tmp <- d[1,];tmp$frequency <- NA;tmp})})
   ##   xyplot(frequency~time|locus+type,zna,
   ##          groups=color,
   ##          par.settings=list(
@@ -247,9 +257,9 @@ simulate.drift.selection <- function
   ## animate both at the same time ??
   ##if(animate)
   ##  myanim("both","Allele frequency and ancestral estimate evolution",bigplot)
-  molt <- melt(sim$fr)
+  molt <- melt(fr)
   names(molt) <- c("locus","population","generation","simulated")
-  molt <- merge(molt,sim$s)
+  molt <- merge(molt,s)
   molt <- merge(molt,data.frame(ancestral=F.init,locus=1:Nlocus))
   molt <- merge(molt,poplong)
   list(id=timestr,
@@ -258,7 +268,39 @@ simulate.drift.selection <- function
        fin=data.frame(molt,parameters),
        parameters=parameters)
 }
-##debug(sim)
+interesting.loci <- function
+### Find a small subset of loci for each selection type, from a
+### variety of ancestral frequencies. This will be used to show how
+### allele frequency evolution depends on selection type on population
+### color.
+(fr
+### Data frame of all the simulated allele frequencies.
+ ){
+  to.df <- function(subs){
+    subs <- subset(subs,s==max(s))
+    rows <- c(which(subs$d<0.1)[1],which(subs$d>0.3 & subs$d<0.4)[1])
+    rows <- rows[!is.na(rows)]
+    loci <- subs[rows,"locus"]
+    subset(subs,locus%in%loci)
+  }
+  res <- ddply(transform(fr,d=abs(ancestral-0.5)),.(type),to.df)
+  res[order(res$generation),]
+### Data frame, subset of input data.
+}
+loci.over.time <- function
+### Plot allele frequency evolution over time for each locus, grouping
+### by population color. This shows the difference between selection
+### types and population colors.
+(fr
+### Data frame of simulated allele frequencies.
+ ){
+  ggplot(fr,aes(generation,simulated,group=population,colour=color))+
+    geom_line()+
+    facet_wrap(S~locus,nrow=1)+
+    scale_colour_manual(values=c("blue","turquoise","red"))+
+    labs(y="Simulated blue allele frequency",colour="Population color")+
+    opts(title="Allele frequency evolution varies with selection type and population color")
+}
 
 
 ## conversion to format compatible with endpoint allele frequency
@@ -296,7 +338,8 @@ fixation.endpoints <- function(lf,main="Loci are not always fixed for the same a
   latticeplot(simulated~locus|S,lf,dotplot,
               alpha=1,
               panel=mydot.panel,
-              auto.key=list(space='right',title="Population type",cex.title=CEX.LEG),
+              auto.key=list(space='right',title="Population type",
+                cex.title=CEX.LEG),
               xlab="Locus (a dot is drawn for each population and locus)",
               ylab="Simulated blue allele frequency",
               ylim=c(0,1),
@@ -336,14 +379,6 @@ myanim <- function(f,tit,pfun){
   ani.stop()
 }
 
-## reshaping the data for single allele frequency over time plots
-to.df <- function(i){
-  x <- data.frame(fr[i,,])
-  names(x) <- paste('frequency',1:ncol(x),sep='.')
-  y <- reshape(x,dir='long',varying=names(x),idvar="population")
-  data.frame(y,locus=i)
-}
-##debug(to.df)
 
 anc.est.plot <- function(g){
   est.df <- data.frame(estimate=rowMeans(fr[,,g]),d)
