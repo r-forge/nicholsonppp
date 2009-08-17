@@ -1,18 +1,4 @@
-CEX.LEG <- 1
 ##debug(fixation.endpoints)
-display.params=c("populations",'loci.per.s.value','popsize','generations','p.neutral','fixed')
-deduce.param.label <- function(lt,imp=display.params){
-  L <- sapply(imp,function(cn)if(cn%in%names(lt))
-              {tmp <- unique(lt[,cn]);if(is.numeric(tmp))tmp <- round(tmp,digits=2);tmp} else NULL)
-  lab <- paste(sapply(names(L),function(N)paste(N,
-                                         ": ",
-                                         paste(L[[N]],collapse=", "),
-                                         "  ",
-                                         sep='')),
-        collapse='')
-  if(lab=="")return(NULL)
-  else return(lab)
-}
 ##debug(deduce.param.label)
 ltable <- function(N,lt,fixed){
   get.actual <- function(LT)unlist(LT$pi.sim)
