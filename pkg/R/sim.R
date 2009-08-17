@@ -78,7 +78,7 @@ simulate.drift.selection <- function
   }
   cat("\n")
 
-  parameters <- data.frame(populations,popsize,generations,
+  parameters <- data.frame(populations,popsize,generations,n.locus=Nlocus,
                            loci.per.s.value,beta1,beta2,p.neutral,id=timestr)
 
   return(list(simulated.freqs=fr, ## (locus,generation,population) sim freqs
@@ -96,11 +96,12 @@ sim2df <- function(L){
   rownames(long) <- NULL
   cat("Merging locus-specific annotations.\n")
   molt <- data.frame(molt,long)
-  attr(molt,"parameters") <- L$parameters
   ## These can verify that everything is matched up correctly
   stopifnot(sum(molt$locus!=molt$locus.1)==0)
   stopifnot(sum(molt$population!=molt$population.1)==0)
-  molt[,-grep(".1",names(molt))]
+  molt <- molt[,-grep(".1",names(molt))]
+  attr(molt,"parameters") <- L$parameters
+  molt
 ### Data frame containing all simulated data and parameter values, 1
 ### line per (population,locus,generation) tuple.
 }
