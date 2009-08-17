@@ -1,15 +1,31 @@
+### Text size for lattice legend titles.
 cex.title <- 1
+
+### Default colors used for representing population types.
 pop.colors.default <- c("blue","turquoise","red")
+
+### Default colors used for selection types.
 selection.colors.default <- trellis.par.get("superpose.symbol")$col
 selection.colors.default[3] <- "green"
+
+### Default symbols used for selection types.
 selection.symbols.default <- c("B","N","P")
+
+### Default simulation parameters summarized in plot subtitles.
 display.params <- c("populations",
                     'loci.per.s.value',
                     'popsize',
                     'generations',
                     'p.neutral',
                     'fixed')
-deduce.param.label <- function(lt,imp=display.params){
+
+deduce.param.label <- function
+### Summarize parameter values used in simulations.
+(lt,
+### Data frame of results of simulation.
+ imp=display.params
+### Vector of column names to be searched and reported.
+ ){
   L <- sapply(imp,function(cn)if(cn%in%names(lt)){
     tmp <- unique(lt[,cn])
     if(is.numeric(tmp))tmp <- round(tmp,digits=2)
@@ -43,50 +59,38 @@ interesting.loci <- function
   res[order(res$generation),]
 ### Data frame, subset of input data.
 }
+
 loci.over.time <- function
 ### Plot allele frequency evolution over time for each locus, grouping
 ### by population color. This shows the difference between selection
 ### types and population colors.
 (fr,
 ### Data frame of simulated allele frequencies.
- pop.colors=pop.colors.default
+ pop.colors=pop.colors.default,
 ### Colors to use to distinguish populations (blue, neutral, red)
+ generation=NULL,
+### Generation to emphasize, or NULL for no emphasis.
+ m="Allele frequency evolution varies with selection type and population color"
+### Main title.
  ){
-  ggplot(fr,aes(generation,simulated,group=population,colour=color))+
+  p <- ggplot(fr,aes(generation,simulated,group=population,colour=color))+
     geom_line()+
+    ylim(c(0,1))+
     facet_wrap(S~locus,nrow=1)+
     scale_colour_manual(values=pop.colors)+
     labs(y="Simulated blue allele frequency",colour="Population color")+
-    opts(title="Allele frequency evolution varies with selection type and population color")
+    opts(title=m)
+  if(!is.null(generation))p <- p + geom_vline(xintercept=generation)
+  p
 }
 
-
-## conversion to format compatible with endpoint allele frequency
-## fixation plots
-convert.df <- function(d,g){
-  ## with lattice the easiest way to do legends is just with auto.key
-  ## so in order to have ancestral allele frequencies lets add some
-  ## rows to the data frame
-  d <- subset(d,generation==g)
-  ancest <- d
-  ancest$color <- 'ancestral'
-  ancest$simulated <- ancest$ancestral
-  ancest$population <- 0
-  ancest <- unique(ancest)
-  d <- rbind(ancest,d)
-  d$locus <- factor(d$locus)
-  print(levels(d$locus))
-  d$locus <- reorder(d$locus,d$ancestral,median)
-  print(levels(d$locus))
-  d
-}
 fixation.endpoints <- function
 ### Plot gene frequencies for all loci and populations for a given
 ### generation.
 (lf,
 ### Subset of simulated gene frequency data frame, with just 1
 ### generation.
- main="Loci are not always fixed for the same allele in each population",
+ main="Loci fixation depends on selection type and population color",
 ### Plot title.
  pop.colors=c(pop.colors.default,"black"),
 ### Population color scheme (blue, neutral, red, ancestral).
@@ -98,6 +102,8 @@ fixation.endpoints <- function
  selection.colors=selection.colors.default,
 ### List with element "col" which contains a vector of colors to label
 ### the selection types (balancing, none, positive)
+ sub=deduce.param.label(lf),
+### Subtitle for the plot.
  ...
 ### Other parameters to pass to xyplot.
  ){
@@ -115,8 +121,8 @@ fixation.endpoints <- function
   anc.sim$color <- reorder(anc.sim$color,anc.sim$color,
                            function(x)if(x[1]=="ancestral")1 else 0)
   hilite.locus.ord <- as.integer(map[paste(hilite.locus)])
-  mydot.panel <- function(...,x,subscripts){
-    panel.xyplot(x=x,subscripts=subscripts,...)
+  mydot.panel <- function(x,...){
+    panel.xyplot(x=x,...)
     if((!is.null(hilite.locus))&&hilite.locus.ord%in%x)
       panel.abline(v=hilite.locus.ord)
   }
@@ -130,6 +136,7 @@ fixation.endpoints <- function
          ylim=c(0,1),
          groups=color,
          main=main,
+         sub=sub,
          par.settings=par.settings,
          scales=list(x=list(draw=F)),
          layout=c(5,1),
@@ -146,20 +153,19 @@ fixation.endpoints <- function
          ...)
 }
 
-
-myanim <- function(f,tit,pfun){
-  naivedir <- paste(getwd(),subdir,f,sep="/")
+evolution.animation <- function(f,tit,df,...){
+  naivedir <- paste(getwd(),f,sep="/")
   dir.create(naivedir)
-  ani.start(nmax=generations,
+  ani.start(nmax=max(df$generations),
             title=tit,
             outdir=naivedir,
-            ani.width=1200,
+            ani.width=1000,
             ani.height=800)
   for(g in 1:ani.options("nmax")){
     cat(naivedir,g,"\n")
     ## this actually plots for the less complicated plots
     ## but does nothing for the more complicated bigplot()
-    print(pfun(g)) 
+    bigplot(df,g,...)
   }
   ani.stop()
 }
@@ -207,5 +213,32 @@ anc.est.plot <- function
          xlab="Simulated blue allele frequency",
          ylab="Estimated blue allele frequency",
          main="Allele frequency estimates vary with selection type",
-         auto.key=list(space="right",title="Selection type",cex.title=cex.title))
+         auto.key=list(space="right",
+           title="Selection type",cex.title=cex.title))
 }
+
+bigplot <- function
+### Draw 3 simulation summary plots on the same screen
+### (loci.over.time, anc.est.plot, fixation.endpoints).
+(fr,
+### Data frame from a simulation.
+ g=1,
+### Generation to plot in anc.est.plot and fixation.endpoints, and
+### generation to emphasize in loci.over.time.
+ hilite.locus=1
+### Locus to highlight in the plots.
+ ){
+  ss <- subset(fr,generation==g)
+  vpl <- function(x,y)viewport(layout.pos.row=x,layout.pos.col=y)
+  grid.newpage()
+  pushViewport(viewport(layout=grid.layout(2,2)))
+  p <- loci.over.time(subset(fr,locus==hilite.locus),
+                      generation=g,
+                      m="Allele frequency evolution for 1 locus")
+  print(p,vp=vpl(1,1))
+  aep <- anc.est.plot(ss,hilite.locus=hilite.locus,sub=NULL)
+  pushViewport(vpl(1,2));print(aep,newpage=FALSE);popViewport()
+  fe <- fixation.endpoints(ss,hilite.locus=hilite.locus)
+  pushViewport(vpl(2,1:2));print(fe,newpage=FALSE);popViewport()
+}
+
