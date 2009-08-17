@@ -66,7 +66,7 @@ simulate.drift.selection <- function
   RR <- ifelse(type=="positive"&popcol=="red", 1+smat  ,1)
   ## diagnostic data frame
   ## data.frame(BB,BR,RR,popcol,s,type)
-  cat("Generation: ")
+  cat("Generation:")
   for(t in 2:generations){
     cat(" ",t,sep="")
     ## update all loci for drift
@@ -78,23 +78,29 @@ simulate.drift.selection <- function
   }
   cat("\n")
 
-  cat("Converting simulated allele frequencies to molten data\n")
-  molt <- melt(fr)
-  names(molt) <- c("locus","population","generation","simulated")
-  
-  cat("Merging selection coefficients\n")
-  molt <- merge(molt,s)
-
-  cat("Merging population colors\n")
-  pops <- data.frame(id=1:nrow(Type.POP),color=Type.POP)
-  poplong <- reshape(pops,dir="long",varying=2:ncol(pops),timevar="population")
-  names(poplong)[1] <- "locus"
-  molt <- merge(molt,poplong)
-
-  cat("Adding simulation parameters\n")
   parameters <- data.frame(populations,popsize,generations,
                            loci.per.s.value,beta1,beta2,p.neutral,id=timestr)
-  data.frame(molt,parameters)
+
+  return(list(simulated.freqs=fr, ## (locus,generation,population) sim freqs
+              s=pops <- cbind(s,data.frame(color=Type.POP)), ##per-locus info
+              parameters=parameters)) ## global sim parameters
+}
+
+sim2df <- function(L){
+  cat("Converting simulated allele frequencies to molten data.\n")
+  molt <- melt(L$sim)
+  names(molt) <- c("locus","population","generation","simulated")
+  long <- reshape(L$s,dir="long",
+                  varying=grep("color.",names(L$s)),
+                  timevar="population",idvar="locus")
+  rownames(long) <- NULL
+  cat("Merging locus-specific annotations.\n")
+  molt <- data.frame(molt,long)
+  attr(molt,"parameters") <- L$parameters
+  ## These can verify that everything is matched up correctly
+  stopifnot(sum(molt$locus!=molt$locus.1)==0)
+  stopifnot(sum(molt$population!=molt$population.1)==0)
+  molt[,-grep(".1",names(molt))]
 ### Data frame containing all simulated data and parameter values, 1
 ### line per (population,locus,generation) tuple.
 }
