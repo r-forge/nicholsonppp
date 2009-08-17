@@ -13,10 +13,11 @@ selection.symbols.default <- c("B","N","P")
 
 ### Default simulation parameters summarized in plot subtitles.
 display.params <- c("populations",
-                    'loci.per.s.value',
                     'popsize',
                     'generations',
+                    'n.locus',
                     'p.neutral',
+                    'loci.per.s.value',
                     'fixed')
 
 deduce.param.label <- function
@@ -102,7 +103,7 @@ fixation.endpoints <- function
  selection.colors=selection.colors.default,
 ### List with element "col" which contains a vector of colors to label
 ### the selection types (balancing, none, positive)
- sub=deduce.param.label(lf),
+ sub=deduce.param.label(attr(lf,"parameters")),
 ### Subtitle for the plot.
  ...
 ### Other parameters to pass to xyplot.
@@ -180,7 +181,7 @@ anc.est.plot <- function
  hilite.locus=NULL,
 ### Locus number to highlight on the plot with a circle. NULL means do
 ### not highlight.
- sub=deduce.param.label(fr),
+ sub=deduce.param.label(attr(fr,"parameters")),
 ### Subtitle for the plot.
  selection.colors=selection.colors.default,
 ### Colors for the different selection types (balancing, neutral, positive)
