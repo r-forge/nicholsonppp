@@ -54,6 +54,7 @@ interesting.loci <- function
     subs <- subset(subs,s==max(s))
     rows <- with(subs,c(which(d<0.1)[1],which(d>0.3&d<0.4)[1]))
     rows <- rows[!is.na(rows)]
+    if(length(rows)<2)rows <- 1:2
     loci <- subs[rows,"locus"]
     subset(all.fr,locus%in%loci)
   }
@@ -88,7 +89,8 @@ loci.over.time <- function
     labs(y="Simulated blue allele frequency",colour="Population color")+
     opts(title=m,
          panel.background=theme_rect(colour=NA),
-         strip.background=theme_rect(colour=NA))
+         strip.background=theme_rect(colour=NA),
+         legend.key=theme_rect(colour=NA))
   if(!is.null(generation)){
     p <- p +
       geom_vline(xintercept=generation)+
@@ -248,25 +250,27 @@ sim.summary.plot <- function
 evolution.animation <- function
 ### Create an animation that summarizes a simulation, using
 ### sim.summary.plot for every generation of the simulation.
-(subdir,
-### Subdirectory for plot files, to be created.
- df,
+(df,
 ### Result of sim2df.
- ...
-### Arguments passed to sim.summary.plot.
+ outdir=tempfile(),
+### Subdirectory for plot files, to be created.
+ tit="Allele frequency and ancestral estimate evolution"
+### Title for the animation.
  ){
-  naivedir <- paste(getwd(),f,sep="/")
-  dir.create(naivedir)
-  ani.start(nmax=max(df$generation),
+  dir.create(outdir)
+  ## convert relative path to full path (animation package bug)
+  outdir <- tools::file_path_as_absolute(outdir)
+  gens <- unique(df$generation)
+  ani.start(nmax=length(gens),
             title=tit,
-            outdir=naivedir,
+            outdir=outdir,
             ani.width=1000,
             ani.height=800)
   on.exit(ani.stop())
   loci <- interesting.loci(df)
-  for(g in 1:ani.options("nmax")){
-    cat(naivedir,g,"\n")
-    sim.summary.plot(df,g,...)
+  for(g in gens){
+    cat(outdir,g,"\n")
+    sim.summary.plot(df,g)
   }
 }
 
