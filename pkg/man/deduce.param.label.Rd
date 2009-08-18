@@ -2,20 +2,17 @@
 \Rdversion{1.1}
 \alias{deduce.param.label}
 \title{deduce.param.label}
-\description{display.params=c("populations",'loci','popsize','generations','p.neutral','fixed')}
+\description{Summarize parameter values used in simulations.}
 \usage{
-deduce.param.label(lt, imp)
+deduce.param.label(lt, imp = display.params)
 }
 \arguments{
-  \item{lt}{
-}
-  \item{imp}{
-}
+  \item{lt}{Data frame of results of simulation.}
+  \item{imp}{Vector of column names to be searched and reported.}
 }
 \details{
 }
-\value{
-}
+\value{Text string, or NULL, to use as sub= argument for a high-level lattice function.}
 \references{
 }
 \author{Toby Dylan Hocking <toby.hocking@etu.upmc.fr>}

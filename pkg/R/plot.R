@@ -152,7 +152,7 @@ fixation.endpoints <- function
          main=main,
          sub=sub,
          par.settings=par.settings,
-         scales=list(x=list(draw=F)),
+         scales=list(x=list(draw=FALSE)),
          layout=c(5,1),
          strip=function(which.panel,factor.levels,bg,...){
            level <- gsub(" .*$","",factor.levels[which.panel])
