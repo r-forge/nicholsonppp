@@ -1,5 +1,6 @@
+library(nicholsonppp)
 sim <- sim.drift.selection()
 df <- sim2df(sim)
 df.i <- interesting.loci(df)
-stopifnot(nrow(df.i)/nrow(df)*attr(df,"parameters")$n.locus==6)
+stopifnot(nrow(df.i)/nrow(df)*sim$p$n.locus==6)
 loci.over.time(df.i)
