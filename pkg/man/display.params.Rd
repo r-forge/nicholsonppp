@@ -3,11 +3,11 @@
 \alias{display.params}
 \docType{data}
 \title{display.params}
-\description{##debug(fixation.endpoints)}
+\description{Default simulation parameters summarized in plot subtitles.}
 \usage{display.params}
 \format{
   The format is:
- chr [1:6] "populations" "loci" "popsize" "generations" ...
+ chr [1:7] "populations" "popsize" "generations" "n.locus" ...
 }
 \details{
 }

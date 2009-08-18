@@ -1,4 +1,4 @@
-simulate.drift.selection <- function
+sim.drift.selection <- function
 ### Simulate allele frequency evolution in several populations
 ### according to a simple drift and selection model.
 (populations=12,
@@ -47,7 +47,7 @@ simulate.drift.selection <- function
   s$S <- factor(sfac,levs)
 
   ## each population/locus combination has a different "color"
-  Type.POP <- matrix(sample(names(adapt.pop),populations*Nlocus,T,adapt.pop),
+  Type.POP <- matrix(sample(names(adapt.pop),populations*Nlocus,TRUE,adapt.pop),
                      Nlocus,populations)
 
   ## this will store all of the simulated allele frequencies

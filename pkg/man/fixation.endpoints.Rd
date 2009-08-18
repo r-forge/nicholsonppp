@@ -2,28 +2,24 @@
 \Rdversion{1.1}
 \alias{fixation.endpoints}
 \title{fixation.endpoints}
-\description{CEX.LEG <- 1}
+\description{Plot gene frequencies for all loci and populations for a given generation.}
 \usage{
-fixation.endpoints(lf, main = "Loci are not always fixed for the same allele in each population", par.settings = list(), ancestral.color = "black", hilite.locus = NULL, ...)
+fixation.endpoints(lf, main = "Loci fixation depends on selection type and population color", pop.colors = c(pop.colors.default, "black"), par.settings = list(superpose.symbol = list(col = pop.colors, pch = 20)), hilite.locus = NULL, selection.colors = selection.colors.default, sub = deduce.param.label(attr(lf, "parameters")), ...)
 }
 \arguments{
-  \item{lf}{
-}
-  \item{main}{
-}
-  \item{par.settings}{
-}
-  \item{ancestral.color}{
-}
-  \item{hilite.locus}{
-}
+  \item{lf}{Subset of simulated gene frequency data frame, with just 1 generation.}
+  \item{main}{Plot title.}
+  \item{pop.colors}{Population color scheme (blue, neutral, red, ancestral).}
+  \item{par.settings}{Plot settings as described in trellis.par.get.}
+  \item{hilite.locus}{Locus to highlight with a vertical line, or NULL to highlight nothing.}
+  \item{selection.colors}{List with element "col" which contains a vector of colors to label the selection types (balancing, none, positive)}
+  \item{sub}{Subtitle for the plot.}
   \item{\dots}{
 }
 }
 \details{
 }
-\value{
-}
+\value{The lattice plot.}
 \references{
 }
 \author{Toby Dylan Hocking <toby.hocking@etu.upmc.fr>}
@@ -33,4 +29,6 @@ fixation.endpoints(lf, main = "Loci are not always fixed for the same allele in 
 
 \seealso{
 }
-\examples{}
+\examples{sim <- sim.drift.selection()
+df <- sim2df(sim)
+fixation.endpoints(subset(df,generation==generations))}

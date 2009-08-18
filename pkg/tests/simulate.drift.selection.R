@@ -1,3 +1,2 @@
-library(nicholsonppp)
-sim <- simulate.drift.selection()
+sim <- sim.drift.selection()
 sapply(sim,dim)

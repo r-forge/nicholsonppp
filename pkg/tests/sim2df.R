@@ -1,5 +1,4 @@
-library(nicholsonppp)
-sim <- simulate.drift.selection()
+sim <- sim.drift.selection()
 df <- sim2df(sim)
 dim(df)
 params <- attr(df,"parameters")
