@@ -5,9 +5,9 @@ sim.drift.selection <- function
 ### Number of populations.
  popsize=1000,
 ### Size of each simulated population.
- generations=200,
+ generations=50,
 ### Generations of evolution to simulate.
- loci.per.s.value=50,
+ loci.per.s.value=10,
 ### Number of loci simulated for each s value.
  beta1=0.7,
 ### Parameter for beta distribution of initial allele frequencies.
