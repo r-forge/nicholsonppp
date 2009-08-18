@@ -4,13 +4,12 @@
 \title{evolution.animation}
 \description{Create an animation that summarizes a simulation, using sim.summary.plot for every generation of the simulation.}
 \usage{
-evolution.animation(subdir, df, ...)
+evolution.animation(df, outdir = tempfile(), tit = "Allele frequency and ancestral estimate evolution")
 }
 \arguments{
-  \item{subdir}{Subdirectory for plot files, to be created.}
   \item{df}{Result of sim2df.}
-  \item{\dots}{
-}
+  \item{outdir}{Subdirectory for plot files, to be created.}
+  \item{tit}{Title for the animation.}
 }
 \details{
 }
@@ -25,7 +24,7 @@ evolution.animation(subdir, df, ...)
 
 \seealso{
 }
-\examples{sim <- sim.drift.selection()
+\examples{library(nicholsonppp)
+sim <- sim.drift.selection()
 df <- sim2df(sim)
-evolution.animation(tempfile(),
-                    "Allele frequency and ancestral estimate evolution",df)}
+evolution.animation(df[df$generation\%\%10==1,])}
