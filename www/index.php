@@ -43,6 +43,22 @@ echo $contents; } ?>
 
 <!-- end of project description -->
 
+<h1>Getting started</h1>
+
+<p>You can install the package and run a simulation using the
+following commands in R:</p>
+
+<pre>
+install.packages("animation","ggplot2") # for dependencies on CRAN
+install.packages("nicholsonppp", repos="http://R-Forge.R-project.org")
+sim <- sim.drift.selection()
+df <- sim2df(sim)
+## Plot 6 loci evolving over time:
+loci.over.time(interesting.loci(df))
+## Make an animation that summarizes the simulation:
+evolution.animation(df)
+</pre>
+
 <h1>Animation summary of allele frequency evolution simulation</h1>
 <p><a href="both/index.htm"><img src="both/images/100.png" /></a></p>
 
