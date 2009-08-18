@@ -1,5 +1,4 @@
+library(nicholsonppp)
 sim <- sim.drift.selection()
 df <- sim2df(sim)
-anc.est.plot(subset(df,generation==generations))
-
-
+anc.est.plot(df[df$generation==sim$p$gen,])

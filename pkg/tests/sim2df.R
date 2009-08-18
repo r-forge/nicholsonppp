@@ -1,3 +1,4 @@
+library(nicholsonppp)
 sim <- sim.drift.selection()
 df <- sim2df(sim)
 dim(df)
