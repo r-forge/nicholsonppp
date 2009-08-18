@@ -4,11 +4,10 @@ cex.title <- 1
 ### Default colors used for representing population types.
 pop.colors.default <- c("blue","turquoise","red")
 
-### Default colors used for selection types.
-selection.colors.default <- trellis.par.get("superpose.symbol")$col
-selection.colors.default[3] <- "green"
+### Default colors used for selection types (balancing, neutral, positive).
+selection.colors.default <- c("#0080ff","#ff00ff","green")
 
-### Default symbols used for selection types.
+### Default symbols used for selection types (balancing, neutral, positive).
 selection.symbols.default <- c("B","N","P")
 
 ### Default simulation parameters summarized in plot subtitles.
@@ -39,6 +38,8 @@ deduce.param.label <- function
                                          sep='')),
         collapse='')
   if(lab=="")NULL else lab
+### Text string, or NULL, to use as sub= argument for a high-level
+### lattice function.
 }
 
 interesting.loci <- function
@@ -51,13 +52,18 @@ interesting.loci <- function
  ){
   to.df <- function(subs){
     subs <- subset(subs,s==max(s))
-    rows <- c(which(subs$d<0.1)[1],which(subs$d>0.3 & subs$d<0.4)[1])
+    rows <- with(subs,c(which(d<0.1)[1],which(d>0.3&d<0.4)[1]))
     rows <- rows[!is.na(rows)]
     loci <- subs[rows,"locus"]
-    subset(subs,locus%in%loci)
+    subset(all.fr,locus%in%loci)
   }
-  res <- ddply(transform(fr,d=abs(ancestral-0.5)),.(type),to.df)
-  res[order(res$generation),]
+  all.fr <- fr
+  n.locus <- attr(fr,"parameters")$n.locus
+  ## Optimization when fr is a data frame with repeated loci:
+  if(!is.null(n.locus))fr <- head(fr,n.locus)
+  anc.diff <- transform(fr,d=abs(ancestral-0.5))
+  res <- ddply(anc.diff,.(type),to.df)
+  res
 ### Data frame, subset of input data.
 }
 
@@ -80,9 +86,16 @@ loci.over.time <- function
     facet_wrap(S~locus,nrow=1)+
     scale_colour_manual(values=pop.colors)+
     labs(y="Simulated blue allele frequency",colour="Population color")+
-    opts(title=m)
-  if(!is.null(generation))p <- p + geom_vline(xintercept=generation)
+    opts(title=m,
+         panel.background=theme_rect(colour=NA),
+         strip.background=theme_rect(colour=NA))
+  if(!is.null(generation)){
+    p <- p +
+      geom_vline(xintercept=generation)+
+      geom_hline(aes(yintercept=simulated[1]),colour="grey")
+  }
   p
+### The ggplot2 plot.
 }
 
 fixation.endpoints <- function
@@ -152,25 +165,8 @@ fixation.endpoints <- function
                          ...)
          },
          ...)
+### The lattice plot.
 }
-
-evolution.animation <- function(f,tit,df,...){
-  naivedir <- paste(getwd(),f,sep="/")
-  dir.create(naivedir)
-  ani.start(nmax=max(df$generations),
-            title=tit,
-            outdir=naivedir,
-            ani.width=1000,
-            ani.height=800)
-  for(g in 1:ani.options("nmax")){
-    cat(naivedir,g,"\n")
-    ## this actually plots for the less complicated plots
-    ## but does nothing for the more complicated bigplot()
-    bigplot(df,g,...)
-  }
-  ani.stop()
-}
-
 
 anc.est.plot <- function
 ### Plot naive estimates of ancestral allele frequency versus actual
@@ -216,9 +212,10 @@ anc.est.plot <- function
          main="Allele frequency estimates vary with selection type",
          auto.key=list(space="right",
            title="Selection type",cex.title=cex.title))
+### The lattice plot.
 }
 
-bigplot <- function
+sim.summary.plot <- function
 ### Draw 3 simulation summary plots on the same screen
 ### (loci.over.time, anc.est.plot, fixation.endpoints).
 (fr,
@@ -226,14 +223,19 @@ bigplot <- function
  g=1,
 ### Generation to plot in anc.est.plot and fixation.endpoints, and
 ### generation to emphasize in loci.over.time.
- hilite.locus=1
+ hilite.locus=NULL
 ### Locus to highlight in the plots.
  ){
-  ss <- subset(fr,generation==g)
+  if(is.null(hilite.locus)){
+    fr.i <- interesting.loci(fr)
+    hilite.locus <- tail(fr.i,1)$locus
+  }
+  parameters <- attr(fr,"parameters")
+  ss <- fr[fr$generation==g,]
   vpl <- function(x,y)viewport(layout.pos.row=x,layout.pos.col=y)
   grid.newpage()
   pushViewport(viewport(layout=grid.layout(2,2)))
-  p <- loci.over.time(subset(fr,locus==hilite.locus),
+  p <- loci.over.time(fr[fr$locus==hilite.locus,],
                       generation=g,
                       m="Allele frequency evolution for 1 locus")
   print(p,vp=vpl(1,1))
@@ -241,5 +243,30 @@ bigplot <- function
   pushViewport(vpl(1,2));print(aep,newpage=FALSE);popViewport()
   fe <- fixation.endpoints(ss,hilite.locus=hilite.locus)
   pushViewport(vpl(2,1:2));print(fe,newpage=FALSE);popViewport()
+}
+
+evolution.animation <- function
+### Create an animation that summarizes a simulation, using
+### sim.summary.plot for every generation of the simulation.
+(subdir,
+### Subdirectory for plot files, to be created.
+ df,
+### Result of sim2df.
+ ...
+### Arguments passed to sim.summary.plot.
+ ){
+  naivedir <- paste(getwd(),f,sep="/")
+  dir.create(naivedir)
+  ani.start(nmax=max(df$generation),
+            title=tit,
+            outdir=naivedir,
+            ani.width=1000,
+            ani.height=800)
+  on.exit(ani.stop())
+  loci <- interesting.loci(df)
+  for(g in 1:ani.options("nmax")){
+    cat(naivedir,g,"\n")
+    sim.summary.plot(df,g,...)
+  }
 }
 
