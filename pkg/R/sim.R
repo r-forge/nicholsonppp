@@ -81,12 +81,24 @@ simulate.drift.selection <- function
   parameters <- data.frame(populations,popsize,generations,n.locus=Nlocus,
                            loci.per.s.value,beta1,beta2,p.neutral,id=timestr)
 
-  return(list(simulated.freqs=fr, ## (locus,generation,population) sim freqs
-              s=pops <- cbind(s,data.frame(color=Type.POP)), ##per-locus info
-              parameters=parameters)) ## global sim parameters
+  list(simulated.freqs=fr,
+       s=pops <- cbind(s,data.frame(color=Type.POP)),
+       parameters=parameters)
+  ### List, with elements simulated.freqs, a 3d array with dimensions
+  ### [locus,population,generation]; s, a data frame of loci
+  ### descriptions; parameters, a 1-row data frame of simulation
+  ### parameters. This is the most compact and complete summary of the
+  ### simulation. A huge data frame would be more useful for plotting,
+  ### but sometimes is too big. If you want the huge data frame, use
+  ### sim2df with this list.
 }
 
-sim2df <- function(L){
+sim2df <- function
+### Convert simulation data in list form to a huge data frame useful
+### for plotting.
+(L
+### Result of simulate.drift.selection.
+ ){
   cat("Converting simulated allele frequencies to molten data.\n")
   molt <- melt(L$sim)
   names(molt) <- c("locus","population","generation","simulated")
@@ -103,5 +115,7 @@ sim2df <- function(L){
   attr(molt,"parameters") <- L$parameters
   molt
 ### Data frame containing all simulated data and parameter values, 1
-### line per (population,locus,generation) tuple.
+### line per (locus,population,generation) tuple. Has attribute
+### "parameters" which is the 1-row data frame description of
+### simulation parameters.
 }
