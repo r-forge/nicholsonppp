@@ -29,6 +29,7 @@ fixation.endpoints(lf, main = "Loci fixation depends on selection type and popul
 
 \seealso{
 }
-\examples{sim <- sim.drift.selection()
+\examples{library(nicholsonppp)
+sim <- sim.drift.selection()
 df <- sim2df(sim)
-fixation.endpoints(subset(df,generation==generations))}
+fixation.endpoints(df[df$generation==sim$p$gen,])}

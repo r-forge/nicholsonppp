@@ -4,7 +4,7 @@
 \title{sim.drift.selection}
 \description{Simulate allele frequency evolution in several populations according to a simple drift and selection model.}
 \usage{
-sim.drift.selection(populations = 12, popsize = 1000, generations = 200, loci.per.s.value = 50, beta1 = 0.7, beta2 = 0.7, p.neutral = 0.8, s = c(1, 5)/100, adapt.pop = c(blue = 0.4, red = 0.4, neutral = 0.2))
+sim.drift.selection(populations = 12, popsize = 1000, generations = 50, loci.per.s.value = 10, beta1 = 0.7, beta2 = 0.7, p.neutral = 0.8, s = c(1, 5)/100, adapt.pop = c(blue = 0.4, red = 0.4, neutral = 0.2))
 }
 \arguments{
   \item{populations}{Number of populations.}
