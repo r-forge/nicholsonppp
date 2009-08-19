@@ -1,0 +1,63 @@
+\documentclass{beamer}
+\usetheme{beamerthemeplain}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Outline}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
+
+\begin{document}
+
+\title{Simulation and modeling natural selection on SNP data}
+\author{Toby Dylan Hocking}
+\date{5 June 2009}
+\institute{INRA GABI Jouy-en-Josas}
+
+\frame{\titlepage}
+
+\section[Outline]{}
+
+\frame{\tableofcontents}
+
+\newcommand{\framet}[2]{\frame{\frametitle{#1}{#2}}}
+
+\newcommand{\picslide}[1]{
+  \frame[plain]{
+    \includegraphics[width=\textwidth]{#1}
+  }
+}
+
+\section{Simulation program}
+
+\framet{Motivation and framework}{
+}
+
+\framet{Outline of simulator}{
+}
+
+\picframe{fixation-selection}
+
+\section{Model estimation}
+
+\framet{Nicholson model}{
+}
+
+\picframe{loci-indep}
+\picframe{pi-neutral-fixed}
+\picframe{pi-error-fixed}
+\picframe{popsize-pneutral}
+\picframe{ppp}
+\picframe{ppp-s}
+
+\end{document}

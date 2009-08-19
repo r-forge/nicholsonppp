@@ -1,0 +1,7 @@
+#!/bin/bash
+datestr=2009-06-05
+tar -vxzf $datestr-figures.tgz --wildcards '*.png'
+for f in $datestr*.png;do
+    sedstr="s/$datestr-//"
+    mv $f $(echo $f|sed $sedstr | sed 's/-\././')
+done
