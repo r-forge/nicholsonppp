@@ -71,12 +71,12 @@ evolution.animation(df)
 	  <th>Generations</th>
 	</tr>
 	<tr>
-	  <td><a href="2009-08-10">2009-08-10</a></td>
+	  <td><a href="2009-08-10/index.htm">2009-08-10</a></td>
 	  <td>1200x1000</td>
 	  <td>200</td>
 	</tr>
 	<tr>
-	  <td><a href="2009-08-19">2009-08-19</a></td>
+	  <td><a href="2009-08-19/index.htm">2009-08-19</a></td>
 	  <td>1000x800</td>
 	  <td>200</td>
 	</tr>
