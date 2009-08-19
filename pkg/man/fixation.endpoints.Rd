@@ -1,8 +1,8 @@
 \name{fixation.endpoints}
 \Rdversion{1.1}
 \alias{fixation.endpoints}
-\title{fixation.endpoints}
-\description{Plot gene frequencies for all loci and populations for a given generation.}
+\title{ Plot allele frequency by selection type}
+\description{Plot gene frequencies for all loci and populations for a given generation, stratified by selection type and coefficient.}
 \usage{
 fixation.endpoints(lf, main = "Loci fixation depends on selection type and population color", pop.colors = c(pop.colors.default, "black"), par.settings = list(superpose.symbol = list(col = pop.colors, pch = 20)), hilite.locus = NULL, selection.colors = selection.colors.default, sub = deduce.param.label(attr(lf, "parameters")), ...)
 }
@@ -29,7 +29,4 @@ fixation.endpoints(lf, main = "Loci fixation depends on selection type and popul
 
 \seealso{
 }
-\examples{library(nicholsonppp)
-sim <- sim.drift.selection()
-df <- sim2df(sim)
-fixation.endpoints(df[df$generation==sim$p$gen,])}
+\examples{}

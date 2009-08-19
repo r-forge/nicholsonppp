@@ -1,7 +1,7 @@
 \name{deduce.param.label}
 \Rdversion{1.1}
 \alias{deduce.param.label}
-\title{deduce.param.label}
+\title{ Deduce parameters for plot subtitles}
 \description{Summarize parameter values used in simulations.}
 \usage{
 deduce.param.label(lt, imp = display.params)

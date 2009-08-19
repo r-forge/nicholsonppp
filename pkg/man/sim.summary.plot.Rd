@@ -1,7 +1,7 @@
 \name{sim.summary.plot}
 \Rdversion{1.1}
 \alias{sim.summary.plot}
-\title{sim.summary.plot}
+\title{ Simulation summary plot}
 \description{Draw 3 simulation summary plots on the same screen (loci.over.time, anc.est.plot, fixation.endpoints).}
 \usage{
 sim.summary.plot(fr, g = 1, hilite.locus = NULL)
@@ -24,7 +24,4 @@ sim.summary.plot(fr, g = 1, hilite.locus = NULL)
 
 \seealso{
 }
-\examples{library(nicholsonppp)
-sim <- sim.drift.selection()
-df <- sim2df(sim)
-sim.summary.plot(df,ceiling(sim$p$gen/3*2))}
+\examples{}

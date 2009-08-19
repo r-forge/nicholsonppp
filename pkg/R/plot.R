@@ -19,7 +19,7 @@ display.params <- c("populations",
                     'loci.per.s.value',
                     'fixed')
 
-deduce.param.label <- function
+deduce.param.label <- function # Deduce parameters for plot subtitles
 ### Summarize parameter values used in simulations.
 (lt,
 ### Data frame of results of simulation.
@@ -68,7 +68,7 @@ interesting.loci <- function
 ### Data frame, subset of input data.
 }
 
-loci.over.time <- function
+loci.over.time <- function # Allele frequency time series plots
 ### Plot allele frequency evolution over time for each locus, grouping
 ### by population color. This shows the difference between selection
 ### types and population colors.
@@ -100,9 +100,9 @@ loci.over.time <- function
 ### The ggplot2 plot.
 }
 
-fixation.endpoints <- function
+fixation.endpoints <- function # Plot allele frequency by selection type
 ### Plot gene frequencies for all loci and populations for a given
-### generation.
+### generation, stratified by selection type and coefficient.
 (lf,
 ### Subset of simulated gene frequency data frame, with just 1
 ### generation.
@@ -170,7 +170,7 @@ fixation.endpoints <- function
 ### The lattice plot.
 }
 
-anc.est.plot <- function
+anc.est.plot <- function # Ancestral estimate plot
 ### Plot naive estimates of ancestral allele frequency versus actual
 ### values from the simulation, to see if they agree.
 (fr,
@@ -217,7 +217,7 @@ anc.est.plot <- function
 ### The lattice plot.
 }
 
-sim.summary.plot <- function
+sim.summary.plot <- function # Simulation summary plot
 ### Draw 3 simulation summary plots on the same screen
 ### (loci.over.time, anc.est.plot, fixation.endpoints).
 (fr,

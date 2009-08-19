@@ -2,7 +2,7 @@
 \Rdversion{1.1}
 \alias{selection.symbols.default}
 \docType{data}
-\title{selection.symbols.default}
+\title{selection symbols default}
 \description{Default symbols used for selection types (balancing, neutral, positive).}
 \usage{selection.symbols.default}
 \format{
