@@ -59,9 +59,31 @@ loci.over.time(interesting.loci(df))
 evolution.animation(df)
 </pre>
 
-<h1>Animation summary of allele frequency evolution simulation</h1>
-<p><a href="both/index.htm"><img src="both/images/100.png" /></a></p>
+<h2>Animations of allele frequency evolution simulation</h2>
 
+<table>
+  <tr>
+    <td><img src="ani-thumb.png" /></td>
+    <td><table>
+	<tr>
+	  <th>Date</th>
+	  <th>Image size</th>
+	  <th>Generations</th>
+	</tr>
+	<tr>
+	  <td><a href="2009-08-10">2009-08-10</a></td>
+	  <td>1200x1000</td>
+	  <td>200</td>
+	</tr>
+	<tr>
+	  <td><a href="2009-08-19">2009-08-19</a></td>
+	  <td>1000x800</td>
+	  <td>200</td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+</table>
 <p>The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
 
 </body>
