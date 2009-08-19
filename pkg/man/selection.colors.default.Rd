@@ -2,7 +2,7 @@
 \Rdversion{1.1}
 \alias{selection.colors.default}
 \docType{data}
-\title{selection.colors.default}
+\title{selection colors default}
 \description{Default colors used for selection types (balancing, neutral, positive).}
 \usage{selection.colors.default}
 \format{

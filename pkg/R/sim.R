@@ -1,4 +1,4 @@
-sim.drift.selection <- function
+sim.drift.selection <- function # Simulate drift and selection
 ### Simulate allele frequency evolution in several populations
 ### according to a simple drift and selection model.
 (populations=12,
@@ -93,7 +93,7 @@ sim.drift.selection <- function
   ### sim2df with this list.
 }
 
-sim2df <- function
+sim2df <- function # Convert simulation result to data frame
 ### Convert simulation data in list form to a huge data frame useful
 ### for plotting.
 (L

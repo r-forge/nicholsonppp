@@ -2,7 +2,7 @@
 \Rdversion{1.1}
 \alias{display.params}
 \docType{data}
-\title{display.params}
+\title{display params}
 \description{Default simulation parameters summarized in plot subtitles.}
 \usage{display.params}
 \format{

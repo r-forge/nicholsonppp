@@ -1,7 +1,7 @@
 \name{loci.over.time}
 \Rdversion{1.1}
 \alias{loci.over.time}
-\title{loci.over.time}
+\title{ Allele frequency time series plots}
 \description{Plot allele frequency evolution over time for each locus, grouping by population color. This shows the difference between selection types and population colors.}
 \usage{
 loci.over.time(fr, pop.colors = pop.colors.default, generation = NULL, m = "Allele frequency evolution varies with selection type and population color")
@@ -24,9 +24,4 @@ loci.over.time(fr, pop.colors = pop.colors.default, generation = NULL, m = "Alle
 
 \seealso{
 }
-\examples{library(nicholsonppp)
-sim <- sim.drift.selection()
-df <- sim2df(sim)
-df.i <- interesting.loci(df)
-stopifnot(nrow(df.i)/nrow(df)*sim$p$n.locus==6)
-loci.over.time(df.i)}
+\examples{}

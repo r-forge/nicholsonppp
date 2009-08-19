@@ -1,7 +1,7 @@
 \name{sim2df}
 \Rdversion{1.1}
 \alias{sim2df}
-\title{sim2df}
+\title{ Convert simulation result to data frame}
 \description{Convert simulation data in list form to a huge data frame useful for plotting.}
 \usage{
 sim2df(L)
@@ -21,9 +21,4 @@ sim2df(L)
 
 \seealso{
 }
-\examples{library(nicholsonppp)
-sim <- sim.drift.selection()
-df <- sim2df(sim)
-dim(df)
-params <- attr(df,"parameters")
-stopifnot(!is.null(params))}
+\examples{}

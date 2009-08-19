@@ -1,7 +1,7 @@
 \name{evolution.animation}
 \Rdversion{1.1}
 \alias{evolution.animation}
-\title{evolution.animation}
+\title{evolution animation}
 \description{Create an animation that summarizes a simulation, using sim.summary.plot for every generation of the simulation.}
 \usage{
 evolution.animation(df, outdir = tempfile(), tit = "Allele frequency and ancestral estimate evolution")
@@ -24,7 +24,4 @@ evolution.animation(df, outdir = tempfile(), tit = "Allele frequency and ancestr
 
 \seealso{
 }
-\examples{library(nicholsonppp)
-sim <- sim.drift.selection()
-df <- sim2df(sim)
-evolution.animation(df[df$generation\%\%10==1,])}
+\examples{}

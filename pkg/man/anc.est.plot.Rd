@@ -1,7 +1,7 @@
 \name{anc.est.plot}
 \Rdversion{1.1}
 \alias{anc.est.plot}
-\title{anc.est.plot}
+\title{ Ancestral estimate plot}
 \description{Plot naive estimates of ancestral allele frequency versus actual values from the simulation, to see if they agree.}
 \usage{
 anc.est.plot(fr, hilite.locus = NULL, sub = deduce.param.label(attr(fr, "parameters")), selection.colors = selection.colors.default, selection.symbols = selection.symbols.default)
@@ -25,7 +25,4 @@ anc.est.plot(fr, hilite.locus = NULL, sub = deduce.param.label(attr(fr, "paramet
 
 \seealso{
 }
-\examples{library(nicholsonppp)
-sim <- sim.drift.selection()
-df <- sim2df(sim)
-anc.est.plot(df[df$generation==sim$p$gen,])}
+\examples{}
