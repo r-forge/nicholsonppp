@@ -72,5 +72,8 @@ program nicholson
   print *,'Premiere ligne (fichier Y) ',Y_OBS(1,:)
   print *,'Derniere ligne (fichier Y) ',Y_OBS(nmrk,:)
 
-  call fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pilot_length, out_option, Y_OBS, N_OBS, delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
+  call fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, &
+       npilot, pilot_length, out_option, &
+       Y_OBS, N_OBS, &
+       delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
 end program nicholson
