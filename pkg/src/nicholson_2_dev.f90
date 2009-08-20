@@ -2,18 +2,14 @@
 !on fait les acceptance rate (et les delta) par locus, par pop... plutot qu'une moyenne generale
 !Chnages: on vire le coefficient binomial dans l'update des alphas (ca se simplifie: a priori on doit gagner du temps et limiter l'overflow
 !Changement: calcul des PPPvalues
-include 'prob_module.f90'
-include 'utils_stat.f90'
 include 'fitnicholsonppp.f90'
 program nicholson
 
-  use prob_mod !fonctions diverse pour nombre aleatoires et pdf
-  use utils_stat !fonctions diverses pour les summary statistics
-  use fitnicholsonppp
+  use fitnicholsonpppmod
 
   implicit none
 
-  integer:: err, npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pilot_length, out_option
+  integer:: mrk, err, npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pilot_length, out_option
   integer, allocatable :: Y_OBS(:,:), N_OBS(:,:)
   real :: delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup
   character*30 :: Y_file, N_file
@@ -76,11 +72,5 @@ program nicholson
   print *,'Premiere ligne (fichier Y) ',Y_OBS(1,:)
   print *,'Derniere ligne (fichier Y) ',Y_OBS(nmrk,:)
 
-  call fitnicholsonppp(
-  ! integer
-  npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pilot_length, out_option
-  ! integer matrices
-  Y_OBS, N_OBS,
-  ! real
-  delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
+  call fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pilot_length, out_option, Y_OBS, N_OBS, delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
 end program nicholson

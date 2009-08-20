@@ -1,15 +1,11 @@
-module fitnicholsonppp
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+include 'prob_module.f90'
+include 'utils_stat.f90'
+module fitnicholsonpppmod
+  use prob_mod !fonctions diverse pour nombre aleatoires et pdf
+  use utils_stat !fonctions diverses pour les summary statistics
+contains
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine fitnicholsonppp(
-  ! integer
-  npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pilot_length, out_option
-  ! integer matrices
-  Y_OBS, N_OBS,
-  ! real
-  delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
+subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pilot_length, out_option, Y_OBS, N_OBS, delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
   integer:: err, i_thin, npop, nmrk, pop, mrk, tmp, tst, tst_a, tst_p,tst_c, iter , pilot, &
        seed, nvaleurs, thin,burn_in,npilot,pilot_length , out_option
   integer, allocatable :: Y_OBS(:,:), N_OBS(:,:) , RANGS(:)          
@@ -659,3 +655,4 @@ end subroutine fitnicholsonppp
 
 
 
+end module fitnicholsonpppmod
