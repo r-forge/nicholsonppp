@@ -236,12 +236,7 @@ subroutine fitnicholsonppp &
 !!!!!!!!! CHAINE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   acc_a(:,:)=0. ; acc_p(:)=0. ; acc_c(:)=0.
-  if(out_option==0) then
-     open(3,file='res_alpha.out',status='unknown')
-     open(4,file='res_pi.out',status='unknown')
-  end if
 
-  open(5,file='res_c.out',status='unknown') !quelle que soit l'option on sort les c car pas possible avec le sum_stat sur res_mcmc trie de faire les stats sur les c
   !open(6,file='res_mcmc.out',status='unknown')
 
   print *,'BEGIN CHAIN'
@@ -253,11 +248,13 @@ subroutine fitnicholsonppp &
   end if
 
   if(out_option==0) then
+     open(3,file='res_alpha.out',status='unknown')
+     open(4,file='res_pi.out',status='unknown')
      allocate(RES_A(nmrk,npop,nvaleurs))
      allocate(RES_PI(nmrk,nvaleurs) , RES_C(npop,nvaleurs) )
   end if
 
-  allocate(PPPval(nmrk,npop+1)) !le dernier correspond à al totale
+  allocate(PPPval(nmrk,npop+1)) !le dernier correspond à la totale
   PPPval(:,:)=0.0
   !allocate(BPval(nmrk,npop,1:6)) ! BPval à 3.841 et 6.635 , mean_PVALUE(CHI2) , sd_Pvalue , min,max
   !BPval(:,:,:)=0.0
@@ -265,6 +262,7 @@ subroutine fitnicholsonppp &
 
   !open(1000,file='tt',status='unknown')
 
+  open(5,file='res_c.out',status='unknown') !quelle que soit l'option on sort les c car pas possible avec le sum_stat sur res_mcmc trie de faire les stats sur les c
   do iter=1,nvaleurs
 
      if(mod(iter,nvaleurs/100)==0) print *,'  iteration=',iter
