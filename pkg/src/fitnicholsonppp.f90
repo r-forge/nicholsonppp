@@ -5,22 +5,29 @@ module fitnicholsonpppmod
   use utils_stat !fonctions diverses pour les summary statistics
 contains
 
-subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pilot_length, out_option, Y_OBS, N_OBS, delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
-  integer:: err, i_thin, npop, nmrk, pop, mrk, tmp, tst, tst_a, tst_p,tst_c, iter , pilot, &
-       seed, nvaleurs, thin,burn_in,npilot,pilot_length , out_option
+subroutine fitnicholsonppp &
+     (npop, nmrk, seed, nvaleurs, thin, burn_in, &
+     npilot, pilot_length, out_option, &
+     Y_OBS, N_OBS, &
+     delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
+  integer:: err, i_thin, npop, nmrk, pop, mrk, tmp, tst, tst_a, tst_p, tst_c, &
+       iter , pilot, seed, nvaleurs, thin, burn_in, &
+       npilot, pilot_length, out_option
   integer, allocatable :: Y_OBS(:,:), N_OBS(:,:) , RANGS(:)          
   real, allocatable :: INITS_A(:,:),INITS_P_I(:),INITS_C(:) , & 
        RES_A(:,:,:),RES_PI(:,:),RES_C(:,:) , PPPval(:,:) , &! BPval(:,:,:) , &
        delta_p(:),delta_c(:),delta_a(:,:), acc_a(:,:),acc_p(:),acc_c(:) , &
        mean_cij(:,:,:), mean_a(:,:,:),mean_c(:,:),mean_p(:,:)
-  real :: tmp_mod,tmp_mean,delta_a_init,delta_p_init,delta_c_init,a_up, p_up, c_up , &
-       rate_adjust , acc_tol=0.005, acc_inf , acc_sup , tmp_min, tmp_max ,beta_pi=0.7 , tmp_chi2 ,tmp_pval ,&
+  real :: tmp_mod,tmp_mean,delta_a_init,delta_p_init,delta_c_init, &
+       a_up, p_up, c_up, rate_adjust , acc_tol=0.005, acc_inf, acc_sup, &
+       tmp_min, tmp_max, beta_pi=0.7, tmp_chi2, tmp_pval, &
        tmp_t_obs, tmp_t_rep, tmp_y_rep,tmp_t,tmp_vij
   character*30 :: Y_file, N_file
   call sgrnd(seed) !seed du mersenne twister
   allocate(INITS_A(nmrk,npop) , INITS_P_I(nmrk) , INITS_C(npop) )
 
-  allocate(delta_p(nmrk),delta_c(npop),delta_a(nmrk,npop), acc_a(nmrk,npop),acc_p(nmrk),acc_c(npop)) 
+  allocate(delta_p(nmrk),delta_c(npop),delta_a(nmrk,npop), &
+       acc_a(nmrk,npop),acc_p(nmrk),acc_c(npop)) 
   !initialisation des delta
   delta_p(:)=delta_p_init
   delta_c(:)=delta_c_init
@@ -62,7 +69,8 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
         do mrk=1,nmrk
            tmp_min=max(0.001,INITS_P_I(mrk))
 
-           INITS_C(pop)= INITS_C(pop)+ ((INITS_A(mrk,pop)-INITS_P_I(mrk))**2)/(INITS_P_I(mrk)*(1-INITS_P_I(mrk)))
+           INITS_C(pop)= INITS_C(pop)+ ((INITS_A(mrk,pop)-INITS_P_I(mrk))**2)/ &
+                (INITS_P_I(mrk)*(1-INITS_P_I(mrk)))
         end do
         INITS_C(pop)= INITS_C(pop)/nmrk
      end do
@@ -70,7 +78,8 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
      print *,'###########INITS VALUES#############'
      print *,'C inits values',INITS_C
      tmp_min=REAL_MIN(INITS_P_I(:)) ; tmp_max=REAL_MAX(INITS_P_I(:)) 
-     print *,'min des PI=',tmp_min,'max des PI=',tmp_max,'mean des PI=',sum(INITS_P_I(:))/nmrk
+     print *,'min des PI=',tmp_min,'max des PI=', &
+          tmp_max,'mean des PI=',sum(INITS_P_I(:))/nmrk
      print *,'####################################'
      !INITS_C(:)=0.05
 
@@ -82,20 +91,25 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
 
         do mrk=1,nmrk
            do pop=1,npop   
-              call update_alpha(Y_OBS(mrk,pop),N_OBS(mrk,pop),INITS_A(mrk,pop),INITS_C(pop),INITS_P_I(mrk),delta_a(mrk,pop),tmp,a_up)
+              call update_alpha &
+                   (Y_OBS(mrk,pop),N_OBS(mrk,pop), &
+                   INITS_A(mrk,pop),INITS_C(pop),INITS_P_I(mrk), &
+                   delta_a(mrk,pop),tmp,a_up)
               acc_a(mrk,pop)=acc_a(mrk,pop)+tmp
               INITS_A(mrk,pop)=a_up
            end do
         end do
 
         do mrk=1,nmrk
-           call update_p(INITS_P_I(mrk),INITS_A(mrk,:),INITS_C,delta_p(mrk),tmp,p_up) 
+           call update_p(INITS_P_I(mrk),INITS_A(mrk,:), &
+                INITS_C,delta_p(mrk),tmp,p_up) 
            acc_p(mrk)=acc_p(mrk)+tmp
            INITS_P_I(mrk)=p_up
         end do
 
         do pop=1,npop
-           call update_c(INITS_C(pop),INITS_A(:,pop),INITS_P_I,delta_c(pop),tmp,c_up) 
+           call update_c(INITS_C(pop),INITS_A(:,pop), &
+                INITS_P_I,delta_c(pop),tmp,c_up) 
            acc_c(pop)=acc_c(pop)+tmp 
            INITS_C(pop)=c_up
 
@@ -148,15 +162,25 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
            end do
         end do
 
-        print *,'  Acceptance Rate not achieved for ',tst_a,' out of ',nmrk*npop ,' alphas' 
-        print *,'  Acceptance Rate not achieved for ',tst_p,' out of ',nmrk ,' p' 
-        print *,'  Acceptance Rate not achieved for ',tst_c,' out of ',npop ,' c'
+        print *,'  Acceptance Rate not achieved for ',tst_a, &
+             ' out of ',nmrk*npop ,' alphas' 
+        print *,'  Acceptance Rate not achieved for ',tst_p, &
+             ' out of ',nmrk ,' p' 
+        print *,'  Acceptance Rate not achieved for ',tst_c, &
+             ' out of ',npop ,' c'
 
-        if( ((tst_a+0.0)/(nmrk*npop))>acc_tol .or.  ((tst_p+0.0)/nmrk)>acc_tol .or. tst_c>0 ) tst=1 !!condition pour continuer à ajuster
+        if( ((tst_a+0.0)/(nmrk*npop))>acc_tol .or. &
+             ((tst_p+0.0)/nmrk)>acc_tol .or. tst_c>0 ) tst=1 !!condition pour continuer à ajuster
 
-        print *,'      Mean Acceptance Rate Alpha= ',sum(acc_a(:,:))/(pilot_length*nmrk*npop),' mean delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
-        print *,'      Mean Acceptance Rate Pi   = ',sum(acc_p(:))/(pilot_length*nmrk),' mean delta_p= ',sum(delta_p(:))/nmrk
-        print *,'      Mean Acceptance Rate C    = ',sum(acc_c(:))/(pilot_length*npop),' mean delta_c= ',sum(delta_c(:))/npop
+        print *,'      Mean Acceptance Rate Alpha= ', &
+             sum(acc_a(:,:))/(pilot_length*nmrk*npop), &
+             ' mean delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
+        print *,'      Mean Acceptance Rate Pi   = ', &
+             sum(acc_p(:))/(pilot_length*nmrk), &
+             ' mean delta_p= ',sum(delta_p(:))/nmrk
+        print *,'      Mean Acceptance Rate C    = ', &
+             sum(acc_c(:))/(pilot_length*npop), &
+             ' mean delta_c= ',sum(delta_c(:))/npop
 
      end if
 
@@ -165,7 +189,8 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
 
      print *,'C node values',INITS_C
      tmp_min=REAL_MIN(INITS_P_I(:)) ; tmp_max=REAL_MAX(INITS_P_I(:)) 
-     print *,'min des PI=',tmp_min,'max des PI=',tmp_max,'mean des PI=',sum(INITS_P_I(:))/nmrk
+     print *,'min des PI=',tmp_min,'max des PI=',tmp_max, &
+          'mean des PI=',sum(INITS_P_I(:))/nmrk
 
   end do
 
@@ -185,18 +210,21 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
 
      do mrk=1,nmrk
         do pop=1,npop   
-           call update_alpha(Y_OBS(mrk,pop),N_OBS(mrk,pop),INITS_A(mrk,pop),INITS_C(pop),INITS_P_I(mrk),delta_a(mrk,pop),tmp,a_up)
+           call update_alpha(Y_OBS(mrk,pop),N_OBS(mrk,pop),INITS_A(mrk,pop), &
+                INITS_C(pop),INITS_P_I(mrk),delta_a(mrk,pop),tmp,a_up)
            INITS_A(mrk,pop)=a_up
         end do
      end do
 
      do mrk=1,nmrk
-        call update_p(INITS_P_I(mrk),INITS_A(mrk,:),INITS_C,delta_p(mrk),tmp,p_up) 
+        call update_p(INITS_P_I(mrk),INITS_A(mrk,:), &
+             INITS_C,delta_p(mrk),tmp,p_up) 
         INITS_P_I(mrk)=p_up
      end do
 
      do pop=1,npop
-        call update_c(INITS_C(pop),INITS_A(:,pop),INITS_P_I,delta_c(pop),tmp,c_up) 
+        call update_c(INITS_C(pop),INITS_A(:,pop), &
+             INITS_P_I,delta_c(pop),tmp,c_up) 
         INITS_C(pop)=c_up
      end do
 
@@ -249,9 +277,11 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
         !calcul des moyennes et moy2 des fstij et des PPPVal
         tmp_t=0.0
         do pop=1,npop
-           tmp_vij=INITS_P_i(mrk)*(1-INITS_P_i(mrk))*((N_OBS(mrk,pop)-1)*INITS_C(pop)+1)/N_OBS(mrk,pop)
+           tmp_vij=INITS_P_i(mrk)*(1-INITS_P_i(mrk))* &
+                ((N_OBS(mrk,pop)-1)*INITS_C(pop)+1)/N_OBS(mrk,pop)
            !*(1-INITS_P_i(mrk))*(INITS_C(pop)+1/N_OBS(mrk,pop))
-           tmp_t_obs=(((Y_OBS(mrk,pop)+0.0)/(N_OBS(mrk,pop)+0.0) -INITS_P_i(mrk))**2)/tmp_vij
+           tmp_t_obs=(((Y_OBS(mrk,pop)+0.0)/ &
+                (N_OBS(mrk,pop)+0.0)-INITS_P_i(mrk))**2)/tmp_vij
 
            tmp_y_rep=random_binomial2(N_OBS(mrk,pop),INITS_A(mrk,pop),.TRUE.)
            tmp_t_rep=(((tmp_y_rep/N_OBS(mrk,pop)) -INITS_P_i(mrk))**2)/tmp_vij
@@ -271,8 +301,12 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
            !write(6,'(2(i5,1x),3(f8.6,1x))') mrk,pop,INITS_A(mrk,pop),INITS_P_I(mrk), INITS_C(pop) !, 1-tmp_pval &
            ! ((INITS_A(mrk,pop)-INITS_P_i(mrk))**2)/(INITS_P_i(mrk)*(1-INITS_P_i(mrk))), tmp_chi2 , 
            if(out_option/=2) then 
-              mean_cij(mrk,pop,1)=(mean_cij(mrk,pop,1)*(iter-1)+((INITS_A(mrk,pop)-INITS_P_i(mrk))**2)/(INITS_P_i(mrk)*(1-INITS_P_i(mrk))))/iter
-              mean_cij(mrk,pop,2)=(mean_cij(mrk,pop,2)*(iter-1)+(((INITS_A(mrk,pop)-INITS_P_i(mrk))**2)/(INITS_P_i(mrk)*(1-INITS_P_i(mrk))))**2)/iter
+              mean_cij(mrk,pop,1)=(mean_cij(mrk,pop,1)*(iter-1)+ &
+                   ((INITS_A(mrk,pop)-INITS_P_i(mrk))**2)/ &
+                   (INITS_P_i(mrk)*(1-INITS_P_i(mrk))))/iter
+              mean_cij(mrk,pop,2)=(mean_cij(mrk,pop,2)*(iter-1)+ &
+                   (((INITS_A(mrk,pop)-INITS_P_i(mrk))**2)/ &
+                   (INITS_P_i(mrk)*(1-INITS_P_i(mrk))))**2)/iter
            end if
         end do
         if(tmp_t > 0.0) PPPval(mrk,npop+1)=PPPval(mrk,npop+1)+1.0
@@ -293,8 +327,10 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
                  mean_c(pop,1)=(mean_c(pop,1)*(iter-1)+INITS_C(pop))/iter
                  mean_c(pop,2)=(mean_c(pop,2)*(iter-1)+(INITS_C(pop))**2)/iter
               end if
-              mean_a(mrk,pop,1)=(mean_a(mrk,pop,1)*(iter-1)+INITS_A(mrk,pop))/iter
-              mean_a(mrk,pop,2)=(mean_a(mrk,pop,2)*(iter-1)+(INITS_A(mrk,pop))**2)/iter                  
+              mean_a(mrk,pop,1)=(mean_a(mrk,pop,1)* &
+                   (iter-1)+INITS_A(mrk,pop))/iter
+              mean_a(mrk,pop,2)=(mean_a(mrk,pop,2)* &
+                   (iter-1)+(INITS_A(mrk,pop))**2)/iter                  
            end do
         end do
      end if
@@ -303,20 +339,24 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
      do i_thin=1,thin
         do mrk=1,nmrk
            do pop=1,npop   
-              call update_alpha(Y_OBS(mrk,pop),N_OBS(mrk,pop),INITS_A(mrk,pop),INITS_C(pop),INITS_P_I(mrk),delta_a(mrk,pop),tmp,a_up)
+              call update_alpha(Y_OBS(mrk,pop),N_OBS(mrk,pop), &
+                   INITS_A(mrk,pop),INITS_C(pop),INITS_P_I(mrk), &
+                   delta_a(mrk,pop),tmp,a_up)
               acc_a(mrk,pop)=acc_a(mrk,pop)+tmp
               INITS_A(mrk,pop)=a_up
            end do
         end do
 
         do mrk=1,nmrk
-           call update_p(INITS_P_I(mrk),INITS_A(mrk,:),INITS_C,delta_p(mrk),tmp,p_up) 
+           call update_p(INITS_P_I(mrk),INITS_A(mrk,:), &
+                INITS_C,delta_p(mrk),tmp,p_up) 
            acc_p(mrk)=acc_p(mrk)+tmp
            INITS_P_I(mrk)=p_up
         end do
 
         do pop=1,npop
-           call update_c(INITS_C(pop),INITS_A(:,pop),INITS_P_I,delta_c(pop),tmp,c_up) 
+           call update_c(INITS_C(pop),INITS_A(:,pop), &
+                INITS_P_I,delta_c(pop),tmp,c_up) 
            acc_c(pop)=acc_c(pop)+tmp 
            INITS_C(pop)=c_up
         end do
@@ -329,9 +369,15 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
 
   deallocate(INITS_A,INITS_C,INITS_P_I,Y_OBS,N_OBS)
 
-  print *,'Mean Final Acceptance Rate Alpha= ',sum(acc_a(:,:))/((nvaleurs+0.0)*(thin+0.0)*(nmrk+0.0)*(npop+0.0)),' mean delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
-  print *,'Mean Final Acceptance Rate Pi   = ',sum(acc_p(:))/((nvaleurs+0.0)*(thin+0.0)*(nmrk+0.0)),' mean delta_p= ',sum(delta_p(:))/nmrk
-  print *,'Mean Final Acceptance Rate C    = ',sum(acc_c(:))/((nvaleurs+0.0)*(thin+0.0)*(npop+0.0)),' mean delta_c= ',sum(delta_c(:))/npop
+  print *,'Mean Final Acceptance Rate Alpha= ', &
+       sum(acc_a(:,:))/((nvaleurs+0.0)*(thin+0.0)*(nmrk+0.0)*(npop+0.0)), &
+       ' mean delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
+  print *,'Mean Final Acceptance Rate Pi   = ', &
+       sum(acc_p(:))/((nvaleurs+0.0)*(thin+0.0)*(nmrk+0.0)), &
+       ' mean delta_p= ',sum(delta_p(:))/nmrk
+  print *,'Mean Final Acceptance Rate C    = ', &
+       sum(acc_c(:))/((nvaleurs+0.0)*(thin+0.0)*(npop+0.0)), &
+       ' mean delta_c= ',sum(delta_c(:))/npop
 
 !!!!!
   !!impression des acceptance rate par locus...
@@ -346,13 +392,16 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
   write (102,*) 'POP DELTA RATE'
 
   do mrk=1,nmrk
-     write(101,'(1(i5,1x),2(f8.6,1x))') mrk,delta_p(mrk),acc_p(mrk)/(nvaleurs*thin)
+     write(101,'(1(i5,1x),2(f8.6,1x))') mrk,delta_p(mrk), &
+          acc_p(mrk)/(nvaleurs*thin)
 
      do pop=1,npop
 
-        if(mrk == 1)  write(102,'(1(i5,1x),2(f8.6,1x))') pop,delta_c(pop),acc_c(pop)/(nvaleurs*thin)
+        if(mrk == 1)  write(102,'(1(i5,1x),2(f8.6,1x))') pop, &
+             delta_c(pop),acc_c(pop)/(nvaleurs*thin)
 
-        write(100,'(2(i5,1x),2(f8.6,1x))') mrk,pop,delta_a(mrk,pop),acc_a(mrk,pop)/(nvaleurs*thin)
+        write(100,'(2(i5,1x),2(f8.6,1x))') mrk,pop, &
+             delta_a(mrk,pop),acc_a(mrk,pop)/(nvaleurs*thin)
 
      end do
   end do
@@ -370,10 +419,16 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
            tmp_mean=sum(RES_A(mrk,pop,:))/nvaleurs
            call TRIIND(RES_A(mrk,pop,:),RANGS)
            call CALMOD (RES_A(mrk,pop,:),RANGS, tmp_mod, tmp) 
-           write(1,'(2i5,9(f12.8,1x))') pop,mrk,tmp_mean,sum((RES_A(mrk,pop,:)-tmp_mean)**2)/(nvaleurs-1),FRCTIL(RES_A(mrk,pop,:), RANGS, 0.5) ,&
-                tmp_mod, FRCTIL(RES_A(mrk,pop,:), RANGS, 0.01),FRCTIL(RES_A(mrk,pop,:), RANGS, 0.05), &
-                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.25),FRCTIL(RES_A(mrk,pop,:), RANGS, 0.75),&
-                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.95),FRCTIL(RES_A(mrk,pop,:), RANGS, 0.99)
+           write(1,'(2i5,9(f12.8,1x))') pop,mrk,tmp_mean, &
+                sum((RES_A(mrk,pop,:)-tmp_mean)**2)/(nvaleurs-1), &
+                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.5), &
+                tmp_mod, &
+                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.01), &
+                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.05), &
+                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.25), &
+                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.75), &
+                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.95), &
+                FRCTIL(RES_A(mrk,pop,:), RANGS, 0.99)
         end do
      end do
      close(1) 
@@ -385,10 +440,16 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
         tmp_mean=sum(RES_PI(mrk,:))/nvaleurs !on recycle acc_a pour la moyenne
         call TRIIND(RES_PI(mrk,:),RANGS)
         call CALMOD (RES_PI(mrk,:),RANGS, tmp_mod, tmp) !on recycle acc_p pour le mode
-        write(1,'(i5,9(f12.8,1x))') mrk,tmp_mean,sum((RES_PI(mrk,:)-tmp_mean)**2)/(nvaleurs-1),FRCTIL(RES_PI(mrk,:), RANGS, 0.5) ,&
-             tmp_mod, FRCTIL(RES_PI(mrk,:), RANGS, 0.01),FRCTIL(RES_PI(mrk,:), RANGS, 0.05), &
-             FRCTIL(RES_PI(mrk,:), RANGS, 0.25),FRCTIL(RES_PI(mrk,:), RANGS, 0.75),&
-             FRCTIL(RES_PI(mrk,:), RANGS, 0.95),FRCTIL(RES_PI(mrk,:), RANGS, 0.99)
+        write(1,'(i5,9(f12.8,1x))') mrk,tmp_mean, &
+             sum((RES_PI(mrk,:)-tmp_mean)**2)/(nvaleurs-1), &
+             FRCTIL(RES_PI(mrk,:), RANGS, 0.5) ,&
+             tmp_mod, &
+             FRCTIL(RES_PI(mrk,:), RANGS, 0.01), &
+             FRCTIL(RES_PI(mrk,:), RANGS, 0.05), &
+             FRCTIL(RES_PI(mrk,:), RANGS, 0.25), &
+             FRCTIL(RES_PI(mrk,:), RANGS, 0.75), &
+             FRCTIL(RES_PI(mrk,:), RANGS, 0.95), &
+             FRCTIL(RES_PI(mrk,:), RANGS, 0.99)
      end do
      close(1)     
      deallocate(RES_PI)  
@@ -399,10 +460,16 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
         tmp_mean=sum(RES_C(pop,:))/nvaleurs !on recycle acc_a pour la moyenne
         call TRIIND(RES_C(pop,:),RANGS)
         call CALMOD (RES_C(pop,:),RANGS, tmp_mod, tmp) !on recycle acc_p pour le mode
-        write(1,'(i5,9(f12.8,1x))') pop,tmp_mean,sum((RES_C(pop,:)-tmp_mean)**2)/(nvaleurs-1),FRCTIL(RES_C(pop,:), RANGS, 0.5) ,&
-             tmp_mod, FRCTIL(RES_C(pop,:), RANGS, 0.01),FRCTIL(RES_C(pop,:), RANGS, 0.05), &
-             FRCTIL(RES_C(pop,:), RANGS, 0.25),FRCTIL(RES_C(pop,:), RANGS, 0.75),&
-             FRCTIL(RES_C(pop,:), RANGS, 0.95),FRCTIL(RES_C(pop,:), RANGS, 0.99)
+        write(1,'(i5,9(f12.8,1x))') pop,tmp_mean, &
+             sum((RES_C(pop,:)-tmp_mean)**2)/(nvaleurs-1), &
+             FRCTIL(RES_C(pop,:), RANGS, 0.5) ,&
+             tmp_mod, &
+             FRCTIL(RES_C(pop,:), RANGS, 0.01), &
+             FRCTIL(RES_C(pop,:), RANGS, 0.05), &
+             FRCTIL(RES_C(pop,:), RANGS, 0.25), &
+             FRCTIL(RES_C(pop,:), RANGS, 0.75), &
+             FRCTIL(RES_C(pop,:), RANGS, 0.95), &
+             FRCTIL(RES_C(pop,:), RANGS, 0.99)
      end do
      close(1)     
      deallocate(RES_C) 
@@ -420,12 +487,15 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
      write (3,*) 'POP MOY VAR'
 
      do pop=1,npop
-        write(3,'(1i5,2(f12.8,1x))') pop,mean_c(pop,1),mean_c(pop,2)-(mean_c(pop,1))**2
+        write(3,'(1i5,2(f12.8,1x))') pop, &
+             mean_c(pop,1),mean_c(pop,2)-(mean_c(pop,1))**2
 
         do mrk=1,nmrk
-           write(1,'(2i5,2(f12.8,1x))') pop,mrk,mean_a(mrk,pop,1),mean_a(mrk,pop,2)-(mean_a(mrk,pop,1))**2
+           write(1,'(2i5,2(f12.8,1x))') pop,mrk, &
+                mean_a(mrk,pop,1),mean_a(mrk,pop,2)-(mean_a(mrk,pop,1))**2
 
-           if(pop==1) write(2,'(1i5,2(f12.8,1x))') mrk,mean_p(mrk,1),mean_p(mrk,2)-(mean_p(mrk,1))**2    
+           if(pop==1) write(2,'(1i5,2(f12.8,1x))') mrk, &
+                mean_p(mrk,1),mean_p(mrk,2)-(mean_p(mrk,1))**2    
 
         end do
      end do
@@ -440,7 +510,8 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
      write (1,*) 'POP MRK MOY VAR'
      do pop=1,npop
         do mrk=1,nmrk
-           write(1,'(2i5,2(f12.8,1x))') pop,mrk,mean_cij(mrk,pop,1),mean_cij(mrk,pop,2)-(mean_cij(mrk,pop,1))**2
+           write(1,'(2i5,2(f12.8,1x))') pop,mrk,mean_cij(mrk,pop,1), &
+                mean_cij(mrk,pop,2)-(mean_cij(mrk,pop,1))**2
         end do
      end do
      close(1)
@@ -452,7 +523,8 @@ subroutine fitnicholsonppp(npop, nmrk, seed, nvaleurs, thin, burn_in, npilot, pi
   write (1,*) 'POP MRK PPPVAL PPPVALtot'
   do pop=1,npop
      do mrk=1,nmrk
-        write(1,'(2(i5,1x),2(f12.8,1x))') pop,mrk,PPPval(mrk,pop),PPPval(mrk,npop+1)
+        write(1,'(2(i5,1x),2(f12.8,1x))') pop,mrk, &
+             PPPval(mrk,pop),PPPval(mrk,npop+1)
      end do
   end do
   close(1)
@@ -509,9 +581,11 @@ contains
     !A_i(i_cur,j_cur)=a_prop
     !log_new=log_lik(Y_obs,N_obs,A_i,C_j,P_i)
 
-    log_cur=log_norm_pdf(a_cur,P_i,P_i*(1-P_i)*C_j) + Y_obs*log(a_cur) + (N_obs-Y_obs)*log(1-a_cur) 
+    log_cur=log_norm_pdf(a_cur,P_i,P_i*(1-P_i)*C_j) + &
+         Y_obs*log(a_cur) + (N_obs-Y_obs)*log(1-a_cur) 
     !log(norm_pdf(a_cur,P_i,P_i*(1-P_i)*C_j))+log(binomial_pdf(Y_obs,N_obs,a_cur))   
-    log_new= log_norm_pdf(a_prop,P_i,P_i*(1-P_i)*C_j) + Y_obs*log(a_prop) + (N_obs-Y_obs)*log(1-a_prop) 
+    log_new= log_norm_pdf(a_prop,P_i,P_i*(1-P_i)*C_j) + &
+         Y_obs*log(a_prop) + (N_obs-Y_obs)*log(1-a_prop) 
     !log(norm_pdf(a_prop,P_i,P_i*(1-P_i)*C_j))+log(binomial_pdf(Y_obs,N_obs,a_prop))   
 
 
@@ -563,9 +637,11 @@ contains
     inv_bwd=min(1.,c_prop+delta_c/2) - max(0.,c_prop-delta_c/2)
 
     do tmp_i=1, tmp_nmrk
-       log_cur=log_cur + log_norm_pdf(A_ij(tmp_i),P_i(tmp_i),P_i(tmp_i)*(1-P_i(tmp_i))*c_cur) 
+       log_cur=log_cur + log_norm_pdf(A_ij(tmp_i),P_i(tmp_i), &
+            P_i(tmp_i)*(1-P_i(tmp_i))*c_cur) 
        !log(norm_pdf(A_ij(tmp_i),P_i(tmp_i),P_i(tmp_i)*(1-P_i(tmp_i))*c_cur)) 
-       log_new=log_new + log_norm_pdf(A_ij(tmp_i),P_i(tmp_i),P_i(tmp_i)*(1-P_i(tmp_i))*c_prop)
+       log_new=log_new + log_norm_pdf(A_ij(tmp_i),P_i(tmp_i), &
+            P_i(tmp_i)*(1-P_i(tmp_i))*c_prop)
        !log(norm_pdf(A_ij(tmp_i),P_i(tmp_i),P_i(tmp_i)*(1-P_i(tmp_i))*c_prop)) 
 
     end do
@@ -626,8 +702,10 @@ contains
     !log(beta_pdf(p_prop,beta_pi,beta_pi))
 
     do tmp_i=1,tmp_npop
-       log_cur=log_cur + log_norm_pdf(A_ij(tmp_i),p_cur,p_cur*(1-p_cur)*C_j(tmp_i))
-       log_new=log_new + log_norm_pdf(A_ij(tmp_i),p_prop,p_prop*(1-p_cur)*C_j(tmp_i))
+       log_cur=log_cur + log_norm_pdf(A_ij(tmp_i),p_cur, &
+            p_cur*(1-p_cur)*C_j(tmp_i))
+       log_new=log_new + log_norm_pdf(A_ij(tmp_i),p_prop, &
+            p_prop*(1-p_cur)*C_j(tmp_i))
     end do
 
 
