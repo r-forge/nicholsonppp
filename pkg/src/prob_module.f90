@@ -404,7 +404,7 @@ contains
     !
     implicit none
 
-    real, intent(in) :: a,b
+    real ( kind = 8 ), intent(in) :: a,b
     real :: beta !,gamma_log
 
     if ( a <= 0.0D+00 .or. b <= 0.0D+00 ) then
@@ -872,7 +872,7 @@ contains
     !
     implicit none
 
-    real, intent(in) :: x,a,b
+    real ( kind = 8 ), intent(in) :: x,a,b
     real :: beta_pdf
 
     if ( x < 0.0D+00 .or. 1.0D+00 < x ) then
