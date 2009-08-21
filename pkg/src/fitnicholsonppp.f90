@@ -1,19 +1,18 @@
 include 'prob_module.f90'
 include 'utils_stat.f90'
-module fitnicholsonpppmod
-  use prob_mod !fonctions diverse pour nombre aleatoires et pdf
-  use utils_stat !fonctions diverses pour les summary statistics
-contains
 
 subroutine fitnicholsonppp &
      (npop, nmrk, seed, nvaleurs, thin, burn_in, &
      npilot, pilot_length, out_option, &
-     Y_OBS, N_OBS, &
+     YY, NN, &
      delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
+  use utils_stat
+  use prob_mod
   integer:: err, i_thin, npop, nmrk, pop, mrk, tmp, tst, tst_a, tst_p, tst_c, &
        iter , pilot, seed, nvaleurs, thin, burn_in, &
        npilot, pilot_length, out_option
-  integer, allocatable :: Y_OBS(:,:), N_OBS(:,:) , RANGS(:)          
+  integer, allocatable :: Y_OBS(:,:), N_OBS(:,:) , RANGS(:)
+  integer :: YY(*), NN(*)
   real, allocatable :: INITS_A(:,:),INITS_P_I(:),INITS_C(:) , & 
        RES_A(:,:,:),RES_PI(:,:),RES_C(:,:) , PPPval(:,:) , &! BPval(:,:,:) , &
        delta_p(:),delta_c(:),delta_a(:,:), acc_a(:,:),acc_p(:),acc_c(:) , &
@@ -22,7 +21,23 @@ subroutine fitnicholsonppp &
        a_up, p_up, c_up, rate_adjust , acc_tol=0.005, acc_inf, acc_sup, &
        tmp_min, tmp_max, beta_pi=0.7, tmp_chi2, tmp_pval, &
        tmp_t_obs, tmp_t_rep, tmp_y_rep,tmp_t,tmp_vij
-  character*30 :: Y_file, N_file
+  print *,' No de Marqueurs declares           = ',nmrk
+  print *,' No de Populations                  = ',npop
+  print *,''
+  print *,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+  print *,'           PARAMETRES MCMC'
+  print *,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+  print *,''
+  print *,' Nbre Valeurs Desirees              = ',nvaleurs
+  print *,' Thinning Rate                      = ',thin
+  print *,' Burn in Period Length              = ',burn_in
+  print *,' Max Number of Pilot runs           = ',npilot
+  print *,' Pilot run Length                   = ',pilot_length
+  print *,''
+  print *,' Random Walk deltas (alpha,pi and c)= ',delta_a_init,delta_p_init,delta_c_init
+  print *,' Pilot Run Adjustment Rate Pilot    = ',rate_adjust
+  print *,' Targeted Rejection/Acceptation     = ',acc_inf,'-',acc_sup
+  print *,' Seed (Mersenne-Twister)            = ',seed 
   call sgrnd(seed) !seed du mersenne twister
   allocate(INITS_A(nmrk,npop) , INITS_P_I(nmrk) , INITS_C(npop) )
 
@@ -48,7 +63,26 @@ subroutine fitnicholsonppp &
   !write (101,*) 'ITER MRK DELTA RATE'
   !write (102,*) 'ITER POP DELTA RATE'
 
+  !allocation des valeurs initiales
+  allocate(Y_OBS(nmrk,npop), N_OBS(nmrk,npop) )
+
+  print *,'Input data conversion:'
+  do mrk=1,nmrk
+     do pop=1,npop
+        Y_OBS(mrk,pop)=YY(mrk+(pop-1)*nmrk)
+        N_OBS(mrk,pop)=NN(mrk+(pop-1)*nmrk)
+     end do
+  end do
+
+  print *,'Input data printing:'
+  do mrk=1,nmrk
+     do pop=1,npop
+        print *,mrk,pop,Y_OBS(mrk,pop),N_OBS(mrk,pop)
+     end do
+  end do
+
   pilot=1 ; tst=1 !on elimine le burn-in a vide car on reinitialise chaque fois
+  print *,'Start of pilot runs.'
   do while (pilot<=npilot .and. tst /= 0)
 
 !!!!Reinitialisation des inits
@@ -63,7 +97,7 @@ subroutine fitnicholsonppp &
         INITS_P_I(mrk)=min(0.999,INITS_P_I(mrk))
      end do
 
-     !initialisation des c
+     print *,'Initializing c.'
      do pop=1,npop
         INITS_C(pop)=0.
         do mrk=1,nmrk
@@ -727,8 +761,3 @@ contains
 
 
 end subroutine fitnicholsonppp
-
-
-
-
-end module fitnicholsonpppmod
