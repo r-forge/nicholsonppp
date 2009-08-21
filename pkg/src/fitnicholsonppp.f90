@@ -5,7 +5,8 @@ subroutine fitnicholsonppp &
      (npop, nmrk, seed, nvaleurs, thin, burn_in, &
      npilot, pilot_length, out_option, &
      YY, NN, &
-     delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)
+     delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup)!, &
+!     PPPvec)
   use utils_stat
   use prob_mod
   integer:: err, i_thin, npop, nmrk, pop, mrk, tmp, tst, tst_a, tst_p, tst_c, &
@@ -13,6 +14,7 @@ subroutine fitnicholsonppp &
        npilot, pilot_length, out_option
   integer, allocatable :: Y_OBS(:,:), N_OBS(:,:) , RANGS(:)
   integer :: YY(*), NN(*)
+!  real :: PPPvec(*) ! for return value
   real, allocatable :: INITS_A(:,:),INITS_P_I(:),INITS_C(:) , & 
        RES_A(:,:,:),RES_PI(:,:),RES_C(:,:) , PPPval(:,:) , &! BPval(:,:,:) , &
        delta_p(:),delta_c(:),delta_a(:,:), acc_a(:,:),acc_p(:),acc_c(:) , &
@@ -21,23 +23,23 @@ subroutine fitnicholsonppp &
        a_up, p_up, c_up, rate_adjust , acc_tol=0.005, acc_inf, acc_sup, &
        tmp_min, tmp_max, beta_pi=0.7, tmp_chi2, tmp_pval, &
        tmp_t_obs, tmp_t_rep, tmp_y_rep,tmp_t,tmp_vij
-  print *,' No de Marqueurs declares           = ',nmrk
-  print *,' No de Populations                  = ',npop
-  print *,''
-  print *,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-  print *,'           PARAMETRES MCMC'
-  print *,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-  print *,''
-  print *,' Nbre Valeurs Desirees              = ',nvaleurs
-  print *,' Thinning Rate                      = ',thin
-  print *,' Burn in Period Length              = ',burn_in
-  print *,' Max Number of Pilot runs           = ',npilot
-  print *,' Pilot run Length                   = ',pilot_length
-  print *,''
-  print *,' Random Walk deltas (alpha,pi and c)= ',delta_a_init,delta_p_init,delta_c_init
-  print *,' Pilot Run Adjustment Rate Pilot    = ',rate_adjust
-  print *,' Targeted Rejection/Acceptation     = ',acc_inf,'-',acc_sup
-  print *,' Seed (Mersenne-Twister)            = ',seed 
+  !print *,' No de Marqueurs declares           = ',nmrk
+  !print *,' No de Populations                  = ',npop
+  !print *,''
+  !print *,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+  !print *,'           PARAMETRES MCMC'
+  !print *,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+  !print *,''
+  !print *,' Nbre Valeurs Desirees              = ',nvaleurs
+  !print *,' Thinning Rate                      = ',thin
+  !print *,' Burn in Period Length              = ',burn_in
+  !print *,' Max Number of Pilot runs           = ',npilot
+  !print *,' Pilot run Length                   = ',pilot_length
+  !print *,''
+  !print *,' Random Walk deltas (alpha,pi and c)= ',delta_a_init,delta_p_init,delta_c_init
+  !print *,' Pilot Run Adjustment Rate Pilot    = ',rate_adjust
+  !print *,' Targeted Rejection/Acceptation     = ',acc_inf,'-',acc_sup
+  !print *,' Seed (Mersenne-Twister)            = ',seed 
   call sgrnd(seed) !seed du mersenne twister
   allocate(INITS_A(nmrk,npop) , INITS_P_I(nmrk) , INITS_C(npop) )
 
@@ -66,7 +68,6 @@ subroutine fitnicholsonppp &
   !allocation des valeurs initiales
   allocate(Y_OBS(nmrk,npop), N_OBS(nmrk,npop) )
 
-  print *,'Input data conversion:'
   do mrk=1,nmrk
      do pop=1,npop
         Y_OBS(mrk,pop)=YY(mrk+(pop-1)*nmrk)
@@ -74,15 +75,9 @@ subroutine fitnicholsonppp &
      end do
   end do
 
-  print *,'Input data printing:'
-  do mrk=1,nmrk
-     do pop=1,npop
-        print *,mrk,pop,Y_OBS(mrk,pop),N_OBS(mrk,pop)
-     end do
-  end do
 
   pilot=1 ; tst=1 !on elimine le burn-in a vide car on reinitialise chaque fois
-  print *,'Start of pilot runs.'
+  !print *,'Start of pilot runs.'
   do while (pilot<=npilot .and. tst /= 0)
 
 !!!!Reinitialisation des inits
@@ -97,7 +92,7 @@ subroutine fitnicholsonppp &
         INITS_P_I(mrk)=min(0.999,INITS_P_I(mrk))
      end do
 
-     print *,'Initializing c.'
+     !print *,'Initializing c.'
      do pop=1,npop
         INITS_C(pop)=0.
         do mrk=1,nmrk
@@ -109,19 +104,19 @@ subroutine fitnicholsonppp &
         INITS_C(pop)= INITS_C(pop)/nmrk
      end do
 
-     print *,'###########INITS VALUES#############'
-     print *,'C inits values',INITS_C
+     !print *,'###########INITS VALUES#############'
+     !print *,'C inits values',INITS_C
      tmp_min=REAL_MIN(INITS_P_I(:)) ; tmp_max=REAL_MAX(INITS_P_I(:)) 
-     print *,'min des PI=',tmp_min,'max des PI=', &
-          tmp_max,'mean des PI=',sum(INITS_P_I(:))/nmrk
-     print *,'####################################'
+     !print *,'min des PI=',tmp_min,'max des PI=', &
+     !     tmp_max,'mean des PI=',sum(INITS_P_I(:))/nmrk
+     !print *,'####################################'
      !INITS_C(:)=0.05
 
      acc_a(:,:)=0. ; acc_p(:)=0. ; acc_c(:)=0. 
 
-     print *,'ETUDE PILOTE: ',pilot
+     !print *,'ETUDE PILOTE: ',pilot
      do iter=1,pilot_length
-        if(mod(iter,pilot_length/10)==0) print *,'  iteration=',iter
+        !if(mod(iter,pilot_length/10)==0) print *,'  iteration=',iter
 
         do mrk=1,nmrk
            do pop=1,npop   
@@ -196,42 +191,42 @@ subroutine fitnicholsonppp &
            end do
         end do
 
-        print *,'  Acceptance Rate not achieved for ',tst_a, &
-             ' out of ',nmrk*npop ,' alphas' 
-        print *,'  Acceptance Rate not achieved for ',tst_p, &
-             ' out of ',nmrk ,' p' 
-        print *,'  Acceptance Rate not achieved for ',tst_c, &
-             ' out of ',npop ,' c'
+        !print *,'  Acceptance Rate not achieved for ',tst_a, &
+        !     ' out of ',nmrk*npop ,' alphas' 
+        !print *,'  Acceptance Rate not achieved for ',tst_p, &
+        !     ' out of ',nmrk ,' p' 
+        !print *,'  Acceptance Rate not achieved for ',tst_c, &
+        !     ' out of ',npop ,' c'
 
         if( ((tst_a+0.0)/(nmrk*npop))>acc_tol .or. &
              ((tst_p+0.0)/nmrk)>acc_tol .or. tst_c>0 ) tst=1 !!condition pour continuer à ajuster
 
-        print *,'      Mean Acceptance Rate Alpha= ', &
-             sum(acc_a(:,:))/(pilot_length*nmrk*npop), &
-             ' mean delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
-        print *,'      Mean Acceptance Rate Pi   = ', &
-             sum(acc_p(:))/(pilot_length*nmrk), &
-             ' mean delta_p= ',sum(delta_p(:))/nmrk
-        print *,'      Mean Acceptance Rate C    = ', &
-             sum(acc_c(:))/(pilot_length*npop), &
-             ' mean delta_c= ',sum(delta_c(:))/npop
+        !print *,'      Mean Acceptance Rate Alpha= ', &
+        !     sum(acc_a(:,:))/(pilot_length*nmrk*npop), &
+        !     ' mean delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
+        !print *,'      Mean Acceptance Rate Pi   = ', &
+        !     sum(acc_p(:))/(pilot_length*nmrk), &
+        !     ' mean delta_p= ',sum(delta_p(:))/nmrk
+        !print *,'      Mean Acceptance Rate C    = ', &
+        !     sum(acc_c(:))/(pilot_length*npop), &
+        !     ' mean delta_c= ',sum(delta_c(:))/npop
 
      end if
 
      pilot=pilot+1
 
 
-     print *,'C node values',INITS_C
+     !print *,'C node values',INITS_C
      tmp_min=REAL_MIN(INITS_P_I(:)) ; tmp_max=REAL_MAX(INITS_P_I(:)) 
-     print *,'min des PI=',tmp_min,'max des PI=',tmp_max, &
-          'mean des PI=',sum(INITS_P_I(:))/nmrk
+     !print *,'min des PI=',tmp_min,'max des PI=',tmp_max, &
+     !     'mean des PI=',sum(INITS_P_I(:))/nmrk
 
   end do
 
-  print *,'FIN AJUSTEMENT DES Delta '
-  print *,'  Mean Delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
-  print *,'  Mean Delta_p= ',sum(delta_p(:))/nmrk
-  print *,'  Mean Delta_c= ',sum(delta_c(:))/npop
+  !print *,'FIN AJUSTEMENT DES Delta '
+  !print *,'  Mean Delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
+  !print *,'  Mean Delta_p= ',sum(delta_p(:))/nmrk
+  !print *,'  Mean Delta_c= ',sum(delta_c(:))/npop
 
   ! close(100) ; close(101) ; close(102)
 
@@ -239,7 +234,7 @@ subroutine fitnicholsonppp &
 !!!!!!!!! BURN IN
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  print *,'BEGIN BURN_IN PERIOD'
+  !print *,'BEGIN BURN_IN PERIOD'
   do iter=1,burn_in
 
      do mrk=1,nmrk
@@ -264,7 +259,7 @@ subroutine fitnicholsonppp &
 
   end do
 
-  print *,'END BURN_IN PERIOD'
+  !print *,'END BURN_IN PERIOD'
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! CHAINE
@@ -273,7 +268,7 @@ subroutine fitnicholsonppp &
 
   !open(6,file='res_mcmc.out',status='unknown')
 
-  print *,'BEGIN CHAIN'
+  !print *,'BEGIN CHAIN'
 
   if(out_option/=2) then
      allocate(mean_cij(nmrk,npop,1:2)) ; mean_cij(:,:,:)=0.0
@@ -299,7 +294,7 @@ subroutine fitnicholsonppp &
   open(5,file='res_c.out',status='unknown') !quelle que soit l'option on sort les c car pas possible avec le sum_stat sur res_mcmc trie de faire les stats sur les c
   do iter=1,nvaleurs
 
-     if(mod(iter,nvaleurs/100)==0) print *,'  iteration=',iter
+     !if(mod(iter,nvaleurs/100)==0) print *,'  iteration=',iter
 !!!!!!!!!!!!!!!!!!!!!
      !impression resultats et calucl des fstij
      if(out_option==0) write(4,'(100000(f12.8,1x))') INITS_P_I(1:nmrk)
@@ -401,15 +396,15 @@ subroutine fitnicholsonppp &
 
   deallocate(INITS_A,INITS_C,INITS_P_I,Y_OBS,N_OBS)
 
-  print *,'Mean Final Acceptance Rate Alpha= ', &
-       sum(acc_a(:,:))/((nvaleurs+0.0)*(thin+0.0)*(nmrk+0.0)*(npop+0.0)), &
-       ' mean delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
-  print *,'Mean Final Acceptance Rate Pi   = ', &
-       sum(acc_p(:))/((nvaleurs+0.0)*(thin+0.0)*(nmrk+0.0)), &
-       ' mean delta_p= ',sum(delta_p(:))/nmrk
-  print *,'Mean Final Acceptance Rate C    = ', &
-       sum(acc_c(:))/((nvaleurs+0.0)*(thin+0.0)*(npop+0.0)), &
-       ' mean delta_c= ',sum(delta_c(:))/npop
+  !print *,'Mean Final Acceptance Rate Alpha= ', &
+  !     sum(acc_a(:,:))/((nvaleurs+0.0)*(thin+0.0)*(nmrk+0.0)*(npop+0.0)), &
+  !     ' mean delta_a= ',sum(delta_a(:,:))/(nmrk*npop)
+  !print *,'Mean Final Acceptance Rate Pi   = ', &
+  !     sum(acc_p(:))/((nvaleurs+0.0)*(thin+0.0)*(nmrk+0.0)), &
+  !     ' mean delta_p= ',sum(delta_p(:))/nmrk
+  !print *,'Mean Final Acceptance Rate C    = ', &
+  !     sum(acc_c(:))/((nvaleurs+0.0)*(thin+0.0)*(npop+0.0)), &
+  !     ' mean delta_c= ',sum(delta_c(:))/npop
 
 !!!!!
   !!impression des acceptance rate par locus...
@@ -548,24 +543,14 @@ subroutine fitnicholsonppp &
      end do
      close(1)
   end if
-!!!!!!!!!!!!!!!!
-  !impression des PPvalues (par pop/marker et par marker
-  PPPval(:,:)=PPPval(:,:)/nvaleurs
-  open(1,file='PPPval.out',status='unknown')
-  write (1,*) 'POP MRK PPPVAL PPPVALtot'
-  do pop=1,npop
-     do mrk=1,nmrk
-        write(1,'(2(i5,1x),2(f12.8,1x))') pop,mrk, &
-             PPPval(mrk,pop),PPPval(mrk,npop+1)
-     end do
-  end do
-  close(1)
 
 
-
-!!!!!!!!!!!!!!!!
-
-
+!   PPPval(:,:)=PPPval(:,:)/nvaleurs
+!   do mrk=1,nmrk
+!      !print *,mrk,PPPvec(mrk)
+!      PPPvec(mrk)=PPPval(mrk,npop+1)
+!      !print *,mrk,PPPvec(mrk)
+!   end do
 
   !open(1,file='BPval.out',status='unknown')
   !write (1,*) 'POP MRK BP5 BP1 Mean_BP VAR_P MIN_P MAX_P '
@@ -581,6 +566,8 @@ subroutine fitnicholsonppp &
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  !print *,"right before the contains"
 
 contains
 
@@ -758,6 +745,5 @@ contains
     end if
 
   end subroutine update_p
-
 
 end subroutine fitnicholsonppp
