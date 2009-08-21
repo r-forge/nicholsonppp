@@ -28,27 +28,27 @@ nicholsonppp <- function
 ### Target acceptance rate for rejection sampling, min value.
  acc_sup=0.45,
 ### Target acceptance rate for rejection sampling, max value.
- out_option=1
+ out_option=1,
+### How much detail to print?
+ N_OBS=100
+### Population size.
  ){
   nmrk <- nrow(Y_OBS)
   npop <- ncol(Y_OBS)
-  .Fortran("fitnicholsonppp",
-           as.integer(npop),
-           as.integer(nmrk),
-           as.integer(seed),
-           as.integer(nvaleurs),
-           as.integer(thin),
-           as.integer(burn_in),
-           as.integer(npilot),
-           as.integer(pilot_length),
-           as.integer(out_option),
-           as.double(Y_OBS),
-           as.double(N_OBS),
-           as.double(delta_a_init),
-           as.double(delta_p_init),
-           as.double(delta_c_init),
-           as.double(rate_adjust),
-           as.double(acc_inf),
-           as.double(acc_sup)
-           )
+  N_OBS <- matrix(N_OBS,nrow=nrow(Y_OBS),ncol=ncol(Y_OBS))
+  fargs <- list(integer=c("npop","nmrk","seed","nvaleurs","thin","burn_in",
+                  "npilot","pilot_length","out_option","Y_OBS","N_OBS"),
+                single=c("delta_a_init","delta_p_init","delta_c_init",
+                  "rate_adjust","acc_inf","acc_sup"))
+  fc <- list(as.name(".Fortran"),"fitnicholsonppp")
+  for(N in names(fargs))for(a in fargs[[N]]){
+    fc[[L <- length(fc)+1]] <- call(paste("as.",N,sep=""),as.name(a))
+    names(fc)[L] <- a
+  }
+  names(fc)[2] <- ""
+  cc <- as.call(fc)
+  browser()
+  print(cc)
+  print(sapply(cc,function(x)if(!is.character(x))eval(x) else x))
+  res <- eval(cc)
 }
