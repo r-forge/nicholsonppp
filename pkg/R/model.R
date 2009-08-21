@@ -35,9 +35,12 @@ nicholsonppp <- function
  ){
   nmrk <- nrow(Y_OBS)
   npop <- ncol(Y_OBS)
+  PPPvec <- rep(2.5,nmrk)
   N_OBS <- matrix(N_OBS,nrow=nrow(Y_OBS),ncol=ncol(Y_OBS))
+  YY <- Y_OBS
+  NN <- N_OBS
   fargs <- list(integer=c("npop","nmrk","seed","nvaleurs","thin","burn_in",
-                  "npilot","pilot_length","out_option","Y_OBS","N_OBS"),
+                  "npilot","pilot_length","out_option","YY","NN"),
                 single=c("delta_a_init","delta_p_init","delta_c_init",
                   "rate_adjust","acc_inf","acc_sup"))
   fc <- list(as.name(".Fortran"),"fitnicholsonppp")
@@ -47,8 +50,11 @@ nicholsonppp <- function
   }
   names(fc)[2] <- ""
   cc <- as.call(fc)
-  browser()
+  ## debugging:
   print(cc)
   print(sapply(cc,function(x)if(!is.character(x))eval(x) else x))
   res <- eval(cc)
+  print("FOOBAR")
+  ## post-process...
+  res
 }
