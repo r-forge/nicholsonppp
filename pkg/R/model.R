@@ -3,6 +3,8 @@ nicholsonppp <- function
 ### implented using fast fortran code.
 (Y_OBS,
 ### Matrix of allele frequencies, one for each (locus,population)
+ N_OBS=100,
+### Population size.
 ### pair. Used for nmrk, npop, Y_OBS.
  seed=4501,
 ### Random seed for mersenne twister.
@@ -28,10 +30,8 @@ nicholsonppp <- function
 ### Target acceptance rate for rejection sampling, min value.
  acc_sup=0.45,
 ### Target acceptance rate for rejection sampling, max value.
- out_option=1,
-### How much detail to print?
- N_OBS=100
-### Population size.
+ out_option=1
+### How much detail to print? (deprecated)
  ){
   nmrk <- nrow(Y_OBS)
   npop <- ncol(Y_OBS)
@@ -42,6 +42,7 @@ nicholsonppp <- function
   N_OBS <- matrix(N_OBS,nrow=nrow(Y_OBS),ncol=ncol(Y_OBS))
   YY <- Y_OBS
   NN <- N_OBS
+  ## TODO: beta, variance outputs
   ## order of argument names here should match fortran code
   fargs <- list(integer=c("npop","nmrk","seed","nvaleurs","thin","burn_in",
                   "npilot","pilot_length","out_option","YY","NN"),
@@ -66,4 +67,5 @@ nicholsonppp <- function
   names(ret) <- sub(pre,"",rnames)
   ret$a <- matrix(ret$a,nrow=nmrk,ncol=npop)
   ret
+### List of estimated parameters of the Nicholson model.
 }
