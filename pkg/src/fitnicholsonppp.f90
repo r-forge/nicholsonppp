@@ -1,6 +1,3 @@
-include 'prob_module.f90'
-include 'utils_stat.f90'
-
 subroutine fitnicholsonppp &
      (npop, nmrk, seed, nvaleurs, thin, burn_in, &
      npilot, pilot_length, out_option, &
