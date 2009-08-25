@@ -21,4 +21,9 @@ sim2df(L)
 
 \seealso{
 }
-\examples{}
+\examples{library(nicholsonppp)
+sim <- sim.drift.selection()
+df <- sim2df(sim)
+dim(df)
+params <- attr(df,"parameters")
+stopifnot(!is.null(params))}

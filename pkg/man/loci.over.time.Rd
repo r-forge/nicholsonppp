@@ -24,4 +24,9 @@ loci.over.time(fr, pop.colors = pop.colors.default, generation = NULL, m = "Alle
 
 \seealso{
 }
-\examples{}
+\examples{library(nicholsonppp)
+sim <- sim.drift.selection()
+df <- sim2df(sim)
+df.i <- interesting.loci(df)
+stopifnot(nrow(df.i)/nrow(df)*sim$p$n.locus==6)
+loci.over.time(df.i)}
