@@ -1,4 +1,3 @@
-include 'mers_twist.f90'
 
 module prob_mod
 
