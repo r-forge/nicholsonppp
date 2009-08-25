@@ -25,4 +25,7 @@ anc.est.plot(fr, hilite.locus = NULL, sub = deduce.param.label(attr(fr, "paramet
 
 \seealso{
 }
-\examples{}
+\examples{library(nicholsonppp)
+sim <- sim.drift.selection()
+df <- sim2df(sim)
+anc.est.plot(df[df$generation==sim$p$gen,])}
