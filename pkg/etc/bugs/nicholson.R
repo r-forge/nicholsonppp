@@ -16,14 +16,36 @@ rownames(params) <- ids
 ## init: alpha p tau c
 inits <- list(list(p=rep(0.5,r$I),c=rep(0.1,r$J))) #,alpha=as.matrix(Y/N))
 vars <- c("alpha","p","c")
-res <- bugs(r,inits,vars,"/home/thocking/projects/bugs/nicholson.bugs",n.chains=1,n.iter=500,n.burnin=100)
+
+betafit <- function(beta_pi=0.7){
+  bugsfile <- paste("/home/thocking/projects/bugs/nicholson.bugs.",
+                    beta_pi,sep="")
+  res <- bugs(r,inits,vars,bugsfile,n.chains=1,n.iter=1000,n.burnin=5000)
+  res$mean$p
+}
+
+fit0.7 <- nicholsonppp(r$Y,beta_pi=0.7)
+fit1 <- nicholsonppp(r$Y,beta_pi=1)
+winbugs0.7 <- betafit(0.7)
+winbugs1 <- betafit(1)
 R <- read.res.tables(result.dirs)
 est <- data.frame(simulated=R$pi.sim[,1],
-                  fortran=R$pi.est$MOY,
-                  winbugs=res$mean$p,
+                  fortran.old=R$pi.est$MOY,
+                  winbugs0.7,
+                  winbugs1,
+                  rfortran0.7=fit0.7$p,
+                  rfortran1=fit1$p,
                   locus=factor(1:r$I),
                   ppp=R$ppp$PPPVALtot[1:r$I],
                   R$s)
+
+
+fit2 <- nicholsonppp(observed)
+fit.b7 <- nicholsonppp(observed,beta_pi=0.7)
+df <- data.frame(as.vector(fit$a),as.vector(fit2$a),as.vector(fit.b7$a),as.vector(observed))
+splom(~df[1:4])
+
+
 library(ggplot2)
 molten <- melt(est,c(1,4),2:3)
 names(molten)[3:4] <- c("estimator","estimate")
