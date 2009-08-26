@@ -1,4 +1,7 @@
-system("R CMD SHLIB test.f90")
-try(dyn.unload("test.so"))
-dyn.load("test.so")
-.Fortran("update_alpha",as.integer(c(9,100)),2,foo="bar")
+system("R CMD SHLIB *.f90")
+try(dyn.unload("0mers_twist.so"))
+dyn.load("0mers_twist.so")
+observed <- matrix(rbeta(100,0.7,0.7)*100,nrow=20,ncol=5)
+source("../R/model.R")
+fit <- nicholsonppp(observed)
+

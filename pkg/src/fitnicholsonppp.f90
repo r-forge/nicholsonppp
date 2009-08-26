@@ -2,8 +2,10 @@ subroutine fitnicholsonppp &
      (npop, nmrk, seed, nvaleurs, thin, burn_in, &
      npilot, pilot_length, out_option, &
      YY, NN, &
-     delta_a_init,delta_p_init,delta_c_init, rate_adjust, acc_inf, acc_sup, &
-     return_ppp,return_a,return_c,return_p)
+     delta_a_init,delta_p_init,delta_c_init, &
+     rate_adjust, acc_inf, acc_sup, beta_pi, &
+     return_ppp,return_a,return_c,return_p, &
+     return_a_var,return_c_var,return_p_var)
   use utils_stat
   use prob_mod
   integer:: err, i_thin, npop, nmrk, pop, mrk, tmp, tst, tst_a, tst_p, tst_c, &
@@ -11,14 +13,15 @@ subroutine fitnicholsonppp &
        npilot, pilot_length, out_option
   integer, allocatable :: Y_OBS(:,:), N_OBS(:,:) , RANGS(:)
   integer :: YY(*), NN(*)
-  real :: return_ppp(*), return_a(*), return_c(*), return_p(*) ! for return value
+  real :: return_ppp(*), return_a(*), return_c(*), return_p(*), &
+       return_a_var(*), return_c_var(*), return_p_var(*) ! for return values
   real, allocatable :: INITS_A(:,:),INITS_P_I(:),INITS_C(:) , & 
        RES_A(:,:,:),RES_PI(:,:),RES_C(:,:) , PPPval(:,:) , &! BPval(:,:,:) , &
        delta_p(:),delta_c(:),delta_a(:,:), acc_a(:,:),acc_p(:),acc_c(:) , &
        mean_cij(:,:,:), mean_a(:,:,:),mean_c(:,:),mean_p(:,:)
   real :: tmp_mod,tmp_mean,delta_a_init,delta_p_init,delta_c_init, &
        a_up, p_up, c_up, rate_adjust , acc_tol=0.005, acc_inf, acc_sup, &
-       tmp_min, tmp_max, beta_pi=0.7, tmp_chi2, tmp_pval, &
+       tmp_min, tmp_max, beta_pi, tmp_chi2, tmp_pval, &
        tmp_t_obs, tmp_t_rep, tmp_y_rep,tmp_t,tmp_vij
   !print *,' No de Marqueurs declares           = ',nmrk
   !print *,' No de Populations                  = ',npop
@@ -393,19 +396,19 @@ subroutine fitnicholsonppp &
   
   do pop=1,npop
      return_c(pop)=mean_c(pop,1)
-     !mean_c(pop,2)-(mean_c(pop,1))**2
+     return_c_var(pop)=mean_c(pop,2)-(mean_c(pop,1))**2
   end do
 
   do pop=1,npop
      do mrk=1,nmrk
         return_a(mrk+(pop-1)*nmrk)=mean_a(mrk,pop,1)
-        !mean_a(mrk,pop,2)-(mean_a(mrk,pop,1))**2
+        return_a_var(mrk+(pop-1)*nmrk)=mean_a(mrk,pop,2)-(mean_a(mrk,pop,1))**2
      end do
   end do
 
   do mrk=1,nmrk
      return_p(mrk)=mean_p(mrk,1)
-     !mean_p(mrk,2)-(mean_p(mrk,1))**2    
+     return_p_var(mrk)=mean_p(mrk,2)-(mean_p(mrk,1))**2    
   end do
 
   PPPval(:,:)=PPPval(:,:)/nvaleurs
