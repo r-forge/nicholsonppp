@@ -1,11 +1,18 @@
-nicholsonppp <- function
+nicholsonppp <- function # Enhanced Nicholson model
 ### Fit the Nicholson model and calculate PPP-values, using MCMC
-### implented using fast fortran code.
+### implented using fast fortran code. This function is basically just
+### a convenient wrapper around .Fortran() which calls the compiled
+### fortran code, then post-processes the result.  The model is
+### discussed in Nicholson, et. al., Assessing population
+### differentiation and isolation from single-nucleotide polymorphism
+### data. J. R. Statist. Soc. B (2002) 64, Part 4, pp. 695-715.
 (Y_OBS,
 ### Matrix of allele frequencies, one for each (locus,population)
 ### pair. Used for nmrk, npop, Y_OBS.
  N_OBS=100,
 ### Population size.
+ beta_pi=1,
+### Beta parameter for the model's prior.
  seed=4501,
 ### Random seed for mersenne twister.
  nvaleurs=1000,
@@ -39,16 +46,19 @@ nicholsonppp <- function
   return_a <- rep(-2.5,nmrk*npop)
   return_c <- rep(-2.5,npop)
   return_p <- rep(-2.5,nmrk)
+  return_a_var<- rep(-2.5,nmrk*npop)
+  return_c_var<- rep(-2.5,npop)
+  return_p_var<- rep(-2.5,nmrk)
   N_OBS <- matrix(N_OBS,nrow=nrow(Y_OBS),ncol=ncol(Y_OBS))
   YY <- Y_OBS
   NN <- N_OBS
-  ## TODO: beta, variance outputs
   ## order of argument names here should match fortran code
   fargs <- list(integer=c("npop","nmrk","seed","nvaleurs","thin","burn_in",
                   "npilot","pilot_length","out_option","YY","NN"),
                 single=c("delta_a_init","delta_p_init","delta_c_init",
-                  "rate_adjust","acc_inf","acc_sup",
-                  "return_ppp","return_a","return_c","return_p"))
+                  "rate_adjust","acc_inf","acc_sup","beta_pi",
+                  "return_ppp","return_a","return_c","return_p",
+                  "return_a_var","return_c_var","return_p_var"))
   fc <- list(as.name(".Fortran"),"fitnicholsonppp")
   for(N in names(fargs))for(a in fargs[[N]]){
     fc[[L <- length(fc)+1]] <- call(paste("as.",N,sep=""),as.name(a))
@@ -58,14 +68,16 @@ nicholsonppp <- function
   cc <- as.call(fc)
   ## debugging:
   ##print(cc)
-  ##print(sapply(cc,function(x)if(!is.character(x))eval(x) else x))
+  params <- sapply(cc,function(x)if(!is.character(x))eval(x) else x)
   res <- eval(cc)
   ## post-process...
   pre <- "return_"
   rnames <- grep(pre,names(res),val=TRUE)
   ret <- res[rnames]
   names(ret) <- sub(pre,"",rnames)
+  ret$parameters <- params
   ret$a <- matrix(ret$a,nrow=nmrk,ncol=npop)
+  ret$a_var<- matrix(ret$a_var,nrow=nmrk,ncol=npop)
   ret
 ### List of estimated parameters of the Nicholson model.
 }
