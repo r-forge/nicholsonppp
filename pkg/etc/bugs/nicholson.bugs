@@ -13,6 +13,6 @@ model {
     c[j]~dunif(0,1)}
   for(i in 1 :I) { 
     ##p[i]~dbeta(0.1,0.1)
-    p[i]~dbeta(1,1)
+    p[i]~dbeta(0.7,0.7)
   }
 }

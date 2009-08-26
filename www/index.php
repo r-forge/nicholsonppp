@@ -84,6 +84,23 @@ evolution.animation(df)
     </td>
   </tr>
 </table>
+
+<h2>Compiler notes</h2>
+
+<p>The package has been compiled successfully using gfortran and
+ifort. We prefer using ifort when possible, since it makes the program
+run about 10x faster. To use ifort with R you have to recompile
+R. Download the sources then do:</p>
+
+<pre>
+FC=ifort ./configure && make
+</pre>
+
+<p>Also make sure to add your ifort lib (something like
+intel/Compiler/11.0/081/lib/ia32) to the list of libraries (normally
+/etc/ld.so.conf), then run ldconfig. If you don't have root you may
+want to just set LD_LIBRARY_PATH to the ifort lib.</p>
+
 <p>The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
 
 </body>

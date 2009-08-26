@@ -2,7 +2,7 @@ library(R2WinBUGS)
 ids <- "2009-06-30-15-56-18"
 result.dirs <- paste("~/projects/sim/results/",ids,"/",sep='')
 names(result.dirs) <- ids
-source("db.R") # for read.res.tables
+source("~/projects/sim/db.R") # for read.res.tables
 r <- read.res.tables(result.dirs,c(Y="Y_SIM_HMN",N="N_SIM_HMN"))
 r$I <- nrow(r$Y)
 r$J <- ncol(r$Y)
@@ -24,11 +24,13 @@ est <- data.frame(simulated=R$pi.sim[,1],
                   locus=factor(1:r$I),
                   ppp=R$ppp$PPPVALtot[1:r$I],
                   R$s)
+library(ggplot2)
 molten <- melt(est,c(1,4),2:3)
 names(molten)[3:4] <- c("estimator","estimate")
-xyplot(estimate~simulated,molten,aspect=1,groups=estimator,auto.key=TRUE)
-xyplot(fortran~winbugs,est,aspect=1,groups=type,auto.key=TRUE,panel=function(...){panel.abline(0,1);panel.xyplot(...)})
+##xyplot(estimate~simulated,molten,aspect=1,groups=estimator,auto.key=TRUE)
+##xyplot(fortran~winbugs,est,aspect=1,groups=type,auto.key=TRUE,panel=function(...){panel.abline(0,1);panel.xyplot(...)})
 
+library(latticedl)
 pdf("winbugs-fortran-disagree.pdf",h=8,w=8)
 dl(xyplot,est,fortran~winbugs,type,aspect=1,
    panel=function(...){panel.abline(0,1);panel.xyplot(...)},
