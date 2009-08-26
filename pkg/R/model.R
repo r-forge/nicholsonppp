@@ -3,9 +3,9 @@ nicholsonppp <- function
 ### implented using fast fortran code.
 (Y_OBS,
 ### Matrix of allele frequencies, one for each (locus,population)
+### pair. Used for nmrk, npop, Y_OBS.
  N_OBS=100,
 ### Population size.
-### pair. Used for nmrk, npop, Y_OBS.
  seed=4501,
 ### Random seed for mersenne twister.
  nvaleurs=1000,
