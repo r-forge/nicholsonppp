@@ -18,9 +18,10 @@ inits <- list(list(p=rep(0.5,r$I),c=rep(0.1,r$J))) #,alpha=as.matrix(Y/N))
 vars <- c("alpha","p","c")
 
 betafit <- function(beta_pi=0.7){
-  bugsfile <- paste("/home/thocking/projects/bugs/nicholson.bugs.",
+  bugsfile <- paste("~/nicholsonppp/pkg/etc/bugs/nicholson.bugs.",
                     beta_pi,sep="")
-  res <- bugs(r,inits,vars,bugsfile,n.chains=1,n.iter=1000,n.burnin=5000)
+  res <- bugs(r,inits,vars,bugsfile,n.chains=1,
+              n.iter=6000,n.burnin=5000,n.thin=50)
   res$mean$p
 }
 
@@ -31,19 +32,16 @@ winbugs1 <- betafit(1)
 R <- read.res.tables(result.dirs)
 est <- data.frame(simulated=R$pi.sim[,1],
                   fortran.old=R$pi.est$MOY,
+                  fortranr0.7=fit0.7$p,
+                  fortranr1=fit1$p,
                   winbugs0.7,
                   winbugs1,
-                  rfortran0.7=fit0.7$p,
-                  rfortran1=fit1$p,
                   locus=factor(1:r$I),
                   ppp=R$ppp$PPPVALtot[1:r$I],
                   R$s)
-
-
-fit2 <- nicholsonppp(observed)
-fit.b7 <- nicholsonppp(observed,beta_pi=0.7)
-df <- data.frame(as.vector(fit$a),as.vector(fit2$a),as.vector(fit.b7$a),as.vector(observed))
-splom(~df[1:4])
+pdf("2009-08-27-notbeta.pdf",paper="a4",h=0,w=0)
+splom(~est[1:6],est,groups=type,auto.key=T,main="Beta parameters do not explain discrepancy between estimates",sub="Similar programs yield similar estimates")
+dev.off()
 
 
 library(ggplot2)
