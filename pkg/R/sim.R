@@ -4,7 +4,8 @@ sim.drift.selection <- function # Simulate drift and selection
 (populations=12,
 ### Number of populations.
  popsize=1000,
-### Size of each simulated population.
+### Size of simulated populations. Vectors smaller than number of
+### populations will be repeated.
  generations=50,
 ### Generations of evolution to simulate.
  loci.per.s.value=10,
@@ -20,6 +21,7 @@ sim.drift.selection <- function # Simulate drift and selection
  adapt.pop=c(blue=0.4,red=0.4,neutral=0.2)
 ### Probabilities of color adaptation in populations.
  ){
+  s.orig <- s
   timestr <- gsub('[ :]','-',format(Sys.time()))
   srep <- rep(s,each=loci.per.s.value)
   Nloc <- length(srep)
@@ -70,7 +72,8 @@ sim.drift.selection <- function # Simulate drift and selection
   for(t in 2:generations){
     cat(" ",t,sep="")
     ## update all loci for drift
-    fr[,,t] <- rbinom(populations*Nlocus,popsize,fr[,,t-1])/popsize
+    rvec <- rbinom(populations*Nlocus,popsize,fr[,,t-1])
+    fr[,,t] <- matrix(rvec/popsize,Nlocus,populations,byrow=TRUE)
     ft <- fr[,,t][selected]
     ## update for selection (just loci under selection)
     fr[,,t][selected] <- (BB*ft^2 + BR*ft*(1-ft))/
@@ -78,8 +81,16 @@ sim.drift.selection <- function # Simulate drift and selection
   }
   cat("\n")
 
-  parameters <- data.frame(populations,popsize,generations,n.locus=Nlocus,
-                           loci.per.s.value,beta1,beta2,p.neutral,id=timestr)
+  parameters <- list(populations=populations,
+                     popsize=popsize,
+                     generations=generations,
+                     n.locus=Nlocus,
+                     loci.per.s.value=loci.per.s.value,
+                     beta1=beta1,
+                     beta2=beta2,
+                     p.neutral=p.neutral,
+                     id=timestr,
+                     s=s.orig)
 
   list(simulated.freqs=fr,
        s=pops <- cbind(s,data.frame(color=Type.POP)),
