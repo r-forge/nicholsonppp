@@ -1,14 +1,15 @@
 \name{nicholsonppp}
 \Rdversion{1.1}
 \alias{nicholsonppp}
-\title{nicholsonppp}
-\description{Fit the Nicholson model and calculate PPP-values, using MCMC implented using fast fortran code.}
+\title{ Enhanced Nicholson model}
+\description{Fit the Nicholson model and calculate PPP-values, using MCMC implented using fast fortran code. This function is basically just a convenient wrapper around .Fortran() which calls the compiled fortran code, then post-processes the result.  The model is discussed in Nicholson, et. al., Assessing population differentiation and isolation from single-nucleotide polymorphism data. J. R. Statist. Soc. B (2002) 64, Part 4, pp. 695-715.}
 \usage{
-nicholsonppp(Y_OBS, N_OBS = 100, seed = 4501, nvaleurs = 1000, thin = 50, burn_in = 5000, npilot = 50, pilot_length = 1000, delta_a_init = 0.4, delta_p_init = 1.25, delta_c_init = 0.06, rate_adjust = 1.25, acc_inf = 0.2, acc_sup = 0.45, out_option = 1)
+nicholsonppp(Y_OBS, N_OBS = 100, beta_pi = 1, seed = 4501, nvaleurs = 1000, thin = 50, burn_in = 5000, npilot = 50, pilot_length = 1000, delta_a_init = 0.4, delta_p_init = 1.25, delta_c_init = 0.06, rate_adjust = 1.25, acc_inf = 0.2, acc_sup = 0.45, out_option = 1)
 }
 \arguments{
   \item{Y_OBS}{Matrix of allele frequencies, one for each (locus,population) pair. Used for nmrk, npop, Y_OBS.}
   \item{N_OBS}{Population size.}
+  \item{beta_pi}{Beta parameter for the model's prior.}
   \item{seed}{Random seed for mersenne twister.}
   \item{nvaleurs}{Number of observations to sample in MCMC.}
   \item{thin}{Thinning rate.}
