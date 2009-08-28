@@ -155,7 +155,7 @@ fixation.endpoints <- function # Plot allele frequency by selection type
          sub=sub,
          par.settings=par.settings,
          scales=list(x=list(draw=FALSE)),
-         layout=c(5,1),
+         layout=c(nlevels(anc.sim$S),1),
          strip=function(which.panel,factor.levels,bg,...){
            level <- gsub(" .*$","",factor.levels[which.panel])
            supcol <- level==levels(anc.sim$type)
