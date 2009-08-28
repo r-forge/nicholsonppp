@@ -17,8 +17,9 @@ densityplot(~ppp|program,df,groups=type,layout=c(1,3))
 densityplot(~ppp|program,df,layout=c(1,3))
 
 source("../R/sim.R")
-sims <- sapply(10^(-4:0),
-               function(s)sim.drift.selection(loci=100,
-                                              generations=100,
-                                              s=s),
-               simplify=FALSE)
+
+sims <- mlply(data.frame(s=10^(-3:0)),
+              function(s)
+              sim.drift.selection(loci=100,generations=100,s=s))
+dfs <- sapply(sims,sim2df)
+fixation.endpoints(dfs[dfs$generation==sims[[1]]$p$gen & dfs$type!="none",])
