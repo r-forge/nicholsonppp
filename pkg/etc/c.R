@@ -22,9 +22,9 @@ levels(cc$population)[1] <- "g/2N"
 library(latticedl,lib="~/lib")
 
 pdf("c.est.pdf",paper="a4",h=0,w=0)
-plog <- dl(xyplot,cc,log(c.est)~generation,population,type='l',
-           main="c estimates do not depend on number of generations")
 p <- dl(xyplot,cc,c.est~generation,population,type='l',
+           main="c estimates do not depend on number of generations")
+plog <- dl(xyplot,cc,log(c.est)~generation,population,type='l',
         sub="lines represent different populations")
 plot(p,split=c(1,1,1,2))
 plot(plog,split=c(1,2,1,2),newpage=FALSE)
