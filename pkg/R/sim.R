@@ -68,12 +68,13 @@ sim.drift.selection <- function # Simulate drift and selection
   RR <- ifelse(type=="positive"&popcol=="red", 1+smat  ,1)
   ## diagnostic data frame
   ## data.frame(BB,BR,RR,popcol,s,type)
+  popsize <- rep(popsize,l=populations)
+  popmat <- matrix(popsize,Nlocus,populations,byrow=TRUE)
   cat("Generation:")
   for(t in 2:generations){
     cat(" ",t,sep="")
     ## update all loci for drift
-    rvec <- rbinom(populations*Nlocus,popsize,fr[,,t-1])
-    fr[,,t] <- matrix(rvec/popsize,Nlocus,populations,byrow=TRUE)
+    fr[,,t] <- rbinom(populations*Nlocus,popmat,fr[,,t-1])/popmat
     ft <- fr[,,t][selected]
     ## update for selection (just loci under selection)
     fr[,,t][selected] <- (BB*ft^2 + BR*ft*(1-ft))/
@@ -93,7 +94,7 @@ sim.drift.selection <- function # Simulate drift and selection
                      s=s.orig)
 
   list(simulated.freqs=fr,
-       s=pops <- cbind(s,data.frame(color=Type.POP)),
+       s=cbind(s,color=Type.POP),
        parameters=parameters)
   ### List, with elements simulated.freqs, a 3d array with dimensions
   ### [locus,population,generation]; s, a data frame of loci
@@ -118,7 +119,9 @@ sim2df <- function # Convert simulation result to data frame
                   timevar="population",idvar="locus")
   rownames(long) <- NULL
   cat("Merging locus-specific annotations.\n")
-  molt <- data.frame(molt,long)
+  popsize <- as.vector(matrix(L$p$popsize,
+                              L$p$n.locus,L$p$populations,byrow=TRUE))
+  molt <- data.frame(molt,long,popsize)
   ## These can verify that everything is matched up correctly
   stopifnot(sum(molt$locus!=molt$locus.1)==0)
   stopifnot(sum(molt$population!=molt$population.1)==0)
