@@ -21,5 +21,5 @@ source("../R/sim.R")
 sims <- mlply(data.frame(s=10^(-3:0)),
               function(s)
               sim.drift.selection(loci=100,generations=100,s=s))
-dfs <- sapply(sims,sim2df)
+dfs <- ldply(sims,sim2df)
 fixation.endpoints(dfs[dfs$generation==sims[[1]]$p$gen & dfs$type!="none",])
