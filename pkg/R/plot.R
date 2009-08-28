@@ -27,7 +27,7 @@ deduce.param.label <- function # Deduce parameters for plot subtitles
 ### Vector of column names to be searched and reported.
  ){
   L <- sapply(imp,function(cn)if(cn%in%names(lt)){
-    tmp <- unique(lt[,cn])
+    tmp <- unique(lt[[cn]])
     if(is.numeric(tmp))tmp <- round(tmp,digits=2)
     tmp
   } else NULL)
@@ -45,8 +45,8 @@ deduce.param.label <- function # Deduce parameters for plot subtitles
 interesting.loci <- function
 ### Find a small subset of loci for each selection type, from a
 ### variety of ancestral frequencies. This will be used to show how
-### allele frequency evolution depends on selection type on population
-### color.
+### allele frequency evolution depends on selection type and
+### population color.
 (fr
 ### Data frame of all the simulated allele frequencies.
  ){
@@ -78,15 +78,19 @@ loci.over.time <- function # Allele frequency time series plots
 ### Colors to use to distinguish populations (blue, neutral, red)
  generation=NULL,
 ### Generation to emphasize, or NULL for no emphasis.
- m="Allele frequency evolution varies with selection type and population color"
+ m="Allele frequency evolution varies with selection type and population color",
 ### Main title.
+ popsize.enc=NULL
+### Aesthetic to encode population size. lty or lwd work well. NULL
+### means do not show population size.
  ){
   p <- ggplot(fr,aes(generation,simulated,group=population,colour=color))+
     geom_line()+
     ylim(c(0,1))+
     facet_wrap(S~locus,nrow=1)+
     scale_colour_manual(values=pop.colors)+
-    labs(y="Simulated blue allele frequency",colour="Population color")+
+    labs(y="Simulated blue allele frequency",
+         colour="Population color")+
     opts(title=m,
          panel.background=theme_rect(colour=NA),
          strip.background=theme_rect(colour=NA),
@@ -95,6 +99,17 @@ loci.over.time <- function # Allele frequency time series plots
     p <- p +
       geom_vline(xintercept=generation)+
       geom_hline(aes(yintercept=simulated[1]),colour="grey")
+  }
+  if(!is.null(popsize.enc)){
+    mf <- function(fun.name,argval){
+      L <- list(as.name(fun.name),argval)
+      names(L)[2] <- popsize.enc
+      cl <- as.call(L)
+      eval(cl)
+    }
+    p <- p+
+      mf("aes",call("factor",as.name("popsize")))+
+      mf("labs","Population size")
   }
   p
 ### The ggplot2 plot.
@@ -222,12 +237,15 @@ sim.summary.plot <- function # Simulation summary plot
 ### (loci.over.time, anc.est.plot, fixation.endpoints).
 (fr,
 ### Data frame from a simulation.
- g=1,
+ g=NULL,
 ### Generation to plot in anc.est.plot and fixation.endpoints, and
-### generation to emphasize in loci.over.time.
+### generation to emphasize in loci.over.time. NULL means the last
+### generation in the simulation.
  hilite.locus=NULL
-### Locus to highlight in the plots.
+### Locus to highlight in the plots. NULL means choose an interesting
+### locus under positive selection.
  ){
+  if(is.null(g))g <- attr(fr,"parameters")$gen
   if(is.null(hilite.locus)){
     fr.i <- interesting.loci(fr)
     hilite.locus <- tail(fr.i,1)$locus
