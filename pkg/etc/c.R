@@ -31,3 +31,11 @@ plot(plog,split=c(1,2,1,2),newpage=FALSE)
 dev.off()
 
 qplot(generation,log(c.est),data=cc,group=population,geom="line")
+
+
+load("bugs/all.models.Rdata")
+cc <- data.frame(cbind(old=apply(R$c,2,mean),r1=fit1$c,r0.7=fit0.7$c))
+cpts <- melt(R$c)
+names(cpts) <- c("population","c")
+dl(densityplot,cpts,~c,population)
+splom(cc)
