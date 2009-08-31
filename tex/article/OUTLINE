@@ -1,0 +1,17 @@
+Results to write up:
+Toby Dylan Hocking
+2009-09-27
+
+Nicholson model and PPP-value calculation implemented using FORTRAN
+code, interfaced with R.
+
+R function for simulating allele frequencies under drift and
+selection.
+
+R plots and animations for diagnosing allele frequency simulations.
+
+Sensitivity studies, predicting selection type using PPP-values.
+
+Study of variance of model estimates along with simulation parameters.
+
+Comparison of winbugs and fortran for the nicholson model.
