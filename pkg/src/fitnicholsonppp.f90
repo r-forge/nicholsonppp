@@ -23,23 +23,6 @@ subroutine fitnicholsonppp &
        a_up, p_up, c_up, rate_adjust , acc_tol=0.005, acc_inf, acc_sup, &
        tmp_min, tmp_max, beta_pi, tmp_chi2, tmp_pval, &
        tmp_t_obs, tmp_t_rep, tmp_y_rep,tmp_t,tmp_vij
-  !print *,' No de Marqueurs declares           = ',nmrk
-  !print *,' No de Populations                  = ',npop
-  !print *,''
-  !print *,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-  !print *,'           PARAMETRES MCMC'
-  !print *,'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-  !print *,''
-  !print *,' Nbre Valeurs Desirees              = ',nvaleurs
-  !print *,' Thinning Rate                      = ',thin
-  !print *,' Burn in Period Length              = ',burn_in
-  !print *,' Max Number of Pilot runs           = ',npilot
-  !print *,' Pilot run Length                   = ',pilot_length
-  !print *,''
-  !print *,' Random Walk deltas (alpha,pi and c)= ',delta_a_init,delta_p_init,delta_c_init
-  !print *,' Pilot Run Adjustment Rate Pilot    = ',rate_adjust
-  !print *,' Targeted Rejection/Acceptation     = ',acc_inf,'-',acc_sup
-  !print *,' Seed (Mersenne-Twister)            = ',seed 
   call sgrnd(seed) !seed du mersenne twister
   allocate(INITS_A(nmrk,npop) , INITS_P_I(nmrk) , INITS_C(npop) )
 
@@ -75,6 +58,31 @@ subroutine fitnicholsonppp &
      end do
   end do
 
+  print *,' No de Marqueurs declares           = ',nmrk
+  print *,' No de Populations                  = ',npop
+  print *,' Nbre Valeurs Desirees              = ',nvaleurs
+  print *,' Thinning Rate                      = ',thin
+  print *,' Burn in Period Length              = ',burn_in
+  print *,' Max Number of Pilot runs           = ',npilot
+  print *,' Pilot run Length                   = ',pilot_length
+  print *,' Random Walk deltas (alpha,pi and c)= ',delta_a_init,delta_p_init,delta_c_init
+  print *,' Pilot Run Adjustment Rate Pilot    = ',rate_adjust
+  print *,' Targeted Rejection/Acceptation     = ',acc_inf,'-',acc_sup
+  print *,' Seed (Mersenne-Twister)            = ',seed 
+
+  print *,"Number of observed alleles:"
+  print *,Y_OBS(1,1:npop)
+  print *,Y_OBS(2,1:npop)
+  print *,'...'
+  print *,Y_OBS(nmrk-1,1:npop)
+  print *,Y_OBS(nmrk,1:npop)
+
+  print *,"Number total:"
+  print *,N_OBS(1,1:npop)
+  print *,N_OBS(2,1:npop)
+  print *,'...'
+  print *,N_OBS(nmrk-1,1:npop)
+  print *,N_OBS(nmrk,1:npop)
 
   pilot=1 ; tst=1 !on elimine le burn-in a vide car on reinitialise chaque fois
   !print *,'Start of pilot runs.'
@@ -114,7 +122,7 @@ subroutine fitnicholsonppp &
 
      acc_a(:,:)=0. ; acc_p(:)=0. ; acc_c(:)=0. 
 
-     !print *,'ETUDE PILOTE: ',pilot
+     print *,'ETUDE PILOTE: ',pilot
      do iter=1,pilot_length
         !if(mod(iter,pilot_length/10)==0) print *,'  iteration=',iter
 
@@ -234,7 +242,7 @@ subroutine fitnicholsonppp &
 !!!!!!!!! BURN IN
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  !print *,'BEGIN BURN_IN PERIOD'
+  print *,'BEGIN BURN_IN PERIOD'
   do iter=1,burn_in
 
      do mrk=1,nmrk
@@ -259,7 +267,7 @@ subroutine fitnicholsonppp &
 
   end do
 
-  !print *,'END BURN_IN PERIOD'
+  print *,'END BURN_IN PERIOD'
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! CHAINE
@@ -268,7 +276,7 @@ subroutine fitnicholsonppp &
 
   !open(6,file='res_mcmc.out',status='unknown')
 
-  !print *,'BEGIN CHAIN'
+  print *,'BEGIN CHAIN'
 
   if(out_option/=2) then
      allocate(mean_cij(nmrk,npop,1:2)) ; mean_cij(:,:,:)=0.0
@@ -294,7 +302,7 @@ subroutine fitnicholsonppp &
   !open(5,file='res_c.out',status='unknown') !quelle que soit l'option on sort les c car pas possible avec le sum_stat sur res_mcmc trie de faire les stats sur les c
   do iter=1,nvaleurs
 
-     !if(mod(iter,nvaleurs/100)==0) print *,'  iteration=',iter
+     if(mod(iter,nvaleurs/100)==0) print *,'  iteration=',iter
 !!!!!!!!!!!!!!!!!!!!!
      !impression resultats et calucl des fstij
      !if(out_option==0) write(4,'(100000(f12.8,1x))') INITS_P_I(1:nmrk)
