@@ -17,9 +17,23 @@ densityplot(~ppp|program,df,groups=type,layout=c(1,3))
 densityplot(~ppp|program,df,layout=c(1,3))
 
 source("../R/sim.R")
+source("../R/plot.R")
+library(ggplot2)
+library(lattice)
+## initial study of which s values approach 
+s <- 10^c(-3,-2,-1.5,-1,0)
+sim <- sim.drift.selection(loci=100,generations=100,s=s,p.neutral=0.1)
+df <- sim2df(sim)
+sim.summary.plot(df)
 
-sims <- mlply(data.frame(s=10^(-3:0)),
+sims <- mlply(data.frame(s),
               function(s)
               sim.drift.selection(loci=100,generations=100,s=s))
-dfs <- ldply(sims,sim2df)
-fixation.endpoints(dfs[dfs$generation==sims[[1]]$p$gen & dfs$type!="none",])
+models <- lapply(sims,function(L)nicholsonppp(L$sim[,,L$p$gen]))
+save.image(file="s.models.Rdata")
+
+compare <- function(v){
+  ppp5 <- melt(sapply(models,function(L)L[[v]]))
+  names(ppp5) <- c("locus","sim","value")
+  densityplot(~value,ppp5,groups=sim,main=v)
+}
