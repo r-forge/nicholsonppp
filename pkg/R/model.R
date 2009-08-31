@@ -6,11 +6,11 @@ nicholsonppp <- function # Enhanced Nicholson model
 ### discussed in Nicholson, et. al., Assessing population
 ### differentiation and isolation from single-nucleotide polymorphism
 ### data. J. R. Statist. Soc. B (2002) 64, Part 4, pp. 695-715.
-(Y_OBS,
-### Matrix of allele frequencies, one for each (locus,population)
+(YY,
+### Matrix of allele counts, one for each (locus,population)
 ### pair. Used for nmrk, npop, Y_OBS.
- N_OBS=100,
-### Population size.
+ NN=1000,
+### Number of total markers.
  beta_pi=1,
 ### Beta parameter for the model's prior.
  seed=4501,
@@ -40,8 +40,13 @@ nicholsonppp <- function # Enhanced Nicholson model
  out_option=1
 ### How much detail to print? (deprecated)
  ){
-  nmrk <- nrow(Y_OBS)
-  npop <- ncol(Y_OBS)
+  NN <- matrix(NN,nrow=nrow(YY),ncol=ncol(YY),byrow=TRUE)
+  if(identical(unique(round(as.vector(YY))),c(0,1))){
+    cat("Warning: YY seems to be frequencies, multiplying by NN.\n")
+    YY <- YY*NN
+  }
+  nmrk <- nrow(YY)
+  npop <- ncol(YY)
   return_ppp <- rep(-2.5,nmrk)
   return_a <- rep(-2.5,nmrk*npop)
   return_c <- rep(-2.5,npop)
@@ -49,9 +54,6 @@ nicholsonppp <- function # Enhanced Nicholson model
   return_a_var<- rep(-2.5,nmrk*npop)
   return_c_var<- rep(-2.5,npop)
   return_p_var<- rep(-2.5,nmrk)
-  N_OBS <- matrix(N_OBS,nrow=nrow(Y_OBS),ncol=ncol(Y_OBS))
-  YY <- Y_OBS
-  NN <- N_OBS
   ## order of argument names here should match fortran code
   fargs <- list(integer=c("npop","nmrk","seed","nvaleurs","thin","burn_in",
                   "npilot","pilot_length","out_option","YY","NN"),
