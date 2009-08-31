@@ -2,12 +2,33 @@ source("../R/sim.R")
 source("../R/plot.R")
 source("../R/model.R")
 dyn.load("../src/0mers_twist.so")
-sim <- sim.drift.selection(generations=200,s=0.05,loci=100)
-df <- sim2df(sim)
-res20 <- sapply((1:20)*10,function(g)nicholsonppp(sim$sim[,,g]),simplify=FALSE)
-load("c.Rdata")
-save.image("allc.Rdata")
+dyn.unload("../src/0mers_twist.so")
 library(ggplot2)
+sim <- sim.drift.selection(generations=200,s=0.05,loci=100,popsize=c(500,1000,2000))
+df <- sim2df(sim)
+res8 <- sapply((1:8)*25,function(g)nicholsonppp(sim$sim[,,g]),simplify=FALSE)
+save.image("c.models.8.Rdata")
+
+
+## Compare old and new fortran program estimates:
+compare <- function(v,m){
+  ppp5 <- melt(sapply(m,function(L)L[[v]]))
+  names(ppp5) <- c("locus","sim","value")
+  densityplot(~value,ppp5,groups=sim,main=v)
+}
+res1 <- nicholsonppp(sim$sim[,,25])
+write.table(round(sim$sim[,,25]*100),
+            file="/home/thocking/Desktop/testnich/Y_SIM_HMN",
+            quote=F,row.names=F,col.names=F)
+vars <- c("c","alpha","pi")
+old.est <- lapply(vars,function(v)read.table(paste("~/Desktop/testnich/summary_",v,".out",sep=""),header=TRUE))
+names(old.est) <- vars
+plot(old.est$pi$MOY,res8[[1]]$p)
+plot(old.est$alpha$MOY,res8[[1]]$a)
+plot(old.est$c$MOY,res8[[1]]$c)
+
+##load("c.Rdata")
+load("c.models.8.Rdata")
 library(lattice)
 cc <- melt(sapply(res4,function(L)L$c))
 names(cc) <- c("population","generation","c.est")
