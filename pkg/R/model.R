@@ -41,7 +41,7 @@ nicholsonppp <- function # Enhanced Nicholson model
 ### How much detail to print? (deprecated)
  ){
   NN <- matrix(NN,nrow=nrow(YY),ncol=ncol(YY),byrow=TRUE)
-  if(identical(unique(round(as.vector(YY))),c(0,1))){
+  if(identical(sort(unique(round(as.vector(YY)))),c(0,1))){
     cat("Warning: YY seems to be frequencies, multiplying by NN.\n")
     YY <- YY*NN
   }
