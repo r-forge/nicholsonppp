@@ -1,13 +1,23 @@
 source("../R/sim.R")
 source("../R/plot.R")
 source("../R/model.R")
+source("../R/c.R")
 dyn.load("../src/0mers_twist.so")
 dyn.unload("../src/0mers_twist.so")
 library(ggplot2)
-sim <- sim.drift.selection(generations=200,s=0.05,loci=100,popsize=c(500,1000,2000))
-df <- sim2df(sim)
-res8 <- sapply((1:8)*25,function(g)nicholsonppp(sim$sim[,,g]),simplify=FALSE)
-save.image("c.models.8.Rdata")
+library(lattice)
+
+sim.diff <- sim.drift.selection(generations=200,s=0.05,loci=100,popsize=c(500,1000,2000))
+nppp.diff <- nppp.over.time(sim.diff)
+save(sim.diff,nppp.diff,file="c.models.4.diff.Rdata")
+
+sim.same <- sim.drift.selection(generations=200,s=0.05,loci=100,popsize=1000)
+nppp.same <- nppp.over.time(sim.same)
+save(sim.same,nppp.same,file="c.models.4.same.Rdata")
+
+load("c.models.8.Rdata")
+cc <- c.df(res8)
+c.over.time(cc,main="Differentiation parameter c changes with time but disagrees with theory")
 
 
 ## Compare old and new fortran program estimates:
@@ -27,21 +37,9 @@ plot(old.est$pi$MOY,res8[[1]]$p)
 plot(old.est$alpha$MOY,res8[[1]]$a)
 plot(old.est$c$MOY,res8[[1]]$c)
 
-##load("c.Rdata")
-load("c.models.8.Rdata")
-library(lattice)
-cc <- melt(sapply(res4,function(L)L$c))
-names(cc) <- c("population","generation","c.est")
-cc$generation <- cc$generation*25
-g <- (1:4)*25
-cc <- rbind(cc,data.frame(population=0,
-                          generation=g,
-                          c.est=g/(2*1000)))
-cc$c.est.inv <- 1/cc$c.est
-cc$population <- factor(cc$population)
-levels(cc$population)[1] <- "g/2N"
-library(latticedl,lib="~/lib")
 
+
+library(latticedl,lib="~/lib")
 pdf("c.est.pdf",paper="a4",h=0,w=0)
 p <- dl(xyplot,cc,c.est~generation,population,type='l',
            main="c estimates do not depend on number of generations")
