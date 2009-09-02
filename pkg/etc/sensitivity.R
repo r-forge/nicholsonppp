@@ -3,6 +3,7 @@ source("../R/plot.R")
 source("../R/model.R")
 library(ggplot2)
 library(lattice)
+library(ff)
 dyn.load("../src/0mers_twist.so")
 ## initial study of which s values show a good range of selection
 ## behavior
@@ -35,9 +36,9 @@ models <- nicholsonppp.list(sims)
 ##save(sims,models,file="sims.models.Rdata")
 ##load(file="sims.models.Rdata")
 
-sims.neu <- sim.several.s(s,loci=100,generations=100,p.neutral=0.99)
+sims.neu <- sim.several.s(s,loci=100,generations=100,p.neutral=0.99,array.fun=ff)
 models.neu <- nicholsonppp.list(sims.neu)
-##save(sims,models,file="sims.models.Rdata")
+save(sims.neu,models.neu,file="sims.neu.models.Rdata")
 ##load(file="sims.models.Rdata")
 
 sims.few <- sim.several.s(s,loci=100,generations=100,populations=4)
