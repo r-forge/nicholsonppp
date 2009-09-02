@@ -16,8 +16,7 @@ display.params <- c("populations",
                     'generations',
                     'n.locus',
                     'p.neutral',
-                    'loci.per.s.value',
-                    'fixed')
+                    'loci.per.s.value')
 
 deduce.param.label <- function # Deduce parameters for plot subtitles
 ### Summarize parameter values used in simulations.
@@ -26,6 +25,7 @@ deduce.param.label <- function # Deduce parameters for plot subtitles
  imp=display.params
 ### Vector of column names to be searched and reported.
  ){
+  lt <- as.data.frame(lt)
   L <- sapply(imp,function(cn)if(cn%in%names(lt)){
     tmp <- unique(lt[[cn]])
     if(is.numeric(tmp))tmp <- round(tmp,digits=2)

@@ -32,7 +32,6 @@ c.df <- function
                         type=factor("theoretical")))
   }
   for(ps in unique(cc$popsize))cc <- add.level(ps)
-  cc$c.est.inv <- 1/cc$c.est
   cc
 ### Data frame for plotting the simulated and theoretical values of c.
 }
