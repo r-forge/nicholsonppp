@@ -10,10 +10,52 @@ library(lattice)
 sim.diff <- sim.drift.selection(generations=200,s=0.05,loci=100,popsize=c(500,1000,2000))
 nppp.diff <- nppp.over.time(sim.diff)
 save(sim.diff,nppp.diff,file="c.models.4.diff.Rdata")
+c.diff <- c.df(nppp.diff)
+pdf("c.over.time.diff.pdf",h=0,w=0,paper="a4")
+c.over.time(c.diff,main="Differentiation parameter c depends on population size")
+dev.off()
+## Compare several model fits:
+c.over.time(rbind(do.fit(c.est~generation:popsize+generation,c.diff),
+                  do.fit(c.est~generation:popsize,c.diff,FALSE,"only.int"),
+                  do.fit(c.est~generation*popsize,c.diff,FALSE,"fitfull"),
+                  do.fit(c.est~generation:popsize+generation-1,c.diff,FALSE,"no.intercept")
+                  ))
+## Try log-fit, similar to theoretical model:
+log.data <- do.fit(log(c.est)~log(generation)+log(popsize),c.diff,FALSE,"log")
+log.data$c.est <- exp(log.fit$c.est)
+c.over.time(rbind(do.fit(c.est~generation:popsize+generation,
+                         c.diff,label="linear"),log.data))
+## The original seems to be the best:
+c.over.time(do.fit(c.est~generation:popsize+generation,c.diff))
+
+
 
 sim.same <- sim.drift.selection(generations=200,s=0.05,loci=100,popsize=1000)
 nppp.same <- nppp.over.time(sim.same)
 save(sim.same,nppp.same,file="c.models.4.same.Rdata")
+c.same <- c.df(nppp.same)
+pdf("c.over.time.same.pdf",h=0,w=0,paper="a4")
+c.over.time(c.same,main="Differentiation parameter c increases linearly over time")
+dev.off()
+do.fit <- function(f,data,keep=TRUE,label="fit"){
+  data.same <- subset(data,type=="simulated")
+  fit.same <- lm(f,data.same)
+  print(summary(fit.same))
+  data.same$c.est <- predict(fit.same)
+  data.same$population <- factor(paste(label,data.same$popsize))
+  data.same$type <- factor(label)
+  if(keep)data.same <- rbind(data,data.same)
+  unique(data.same)
+}
+c.over.time(do.fit(c.est~generation,c.same))
+
+c.all <- rbind(data.frame(c.diff,popsizes="different.population.sizes"),
+               data.frame(c.same,popsizes="uniform.population.size"))
+pdf("c.over.time.all.pdf",h=0,w=0,paper="a4")
+c.over.time(c.all,main="Differentiation parameter c depends on population size and time",facets=~popsizes)+theme_bw()
+dev.off()
+
+
 
 load("c.models.8.Rdata")
 cc <- c.df(res8)
