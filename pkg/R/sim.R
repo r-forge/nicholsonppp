@@ -18,8 +18,15 @@ sim.drift.selection <- function # Simulate drift and selection
 ### Proportion of neutral alleles to simulate.
  s=c(1,5)/100,
 ### Vector of selection strength values to simulate.
- adapt.pop=c(blue=0.4,red=0.4,neutral=0.2)
+ adapt.pop=c(blue=0.4,red=0.4,neutral=0.2),
 ### Probabilities of color adaptation in populations.
+ array.fun=array
+### Function to use to construct the evolution array. By default we
+### use a normal R array, but this can be any function that accepts
+### data as the first argument, and a dim argument, and gives a result
+### that behaves like an array. In particular you can use the ff
+### function from the ff package if the simulation is too large for
+### memory.
  ){
   s.orig <- s
   timestr <- gsub('[ :]','-',format(Sys.time()))
@@ -53,7 +60,7 @@ sim.drift.selection <- function # Simulate drift and selection
                      Nlocus,populations)
 
   ## this will store all of the simulated allele frequencies
-  fr <- array(F.init,c(Nlocus,populations,generations))
+  fr <- array.fun(F.init,dim=c(Nlocus,populations,generations))
   ## these will be intermediate data structures to support fast selection
   selected.loci <- matrix(as.character(Type.LOC)!="none",Nlocus,populations)
   selective.pops <- Type.POP!='neutral'
