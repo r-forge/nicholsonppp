@@ -11,20 +11,61 @@ sim <- sim.drift.selection(loci=100,generations=100,s=s,p.neutral=0.1)
 df <- sim2df(sim)
 sim.summary.plot(df)
 
-## do several simulations each with only 1 s value.
-sims <- mlply(data.frame(s),
-              function(s)
-              sim.drift.selection(loci=100,generations=100,s=s))
-## fit a model for each simulation.
-models <- lapply(sims,function(L)nicholsonppp(L$sim[,,L$p$gen]))
-##save(sims,models,file="sims.models.Rdata")
+sim.several.s <- function
+### Do several simulations each with only 1 s value.
+(s,
+### Vector of s values.
+ ...
+### Other arguments to sim.drift.selection.
+ ){
+  mlply(data.frame(s),function(s)sim.drift.selection(s=s,...))
+### List of selection simulations.
+}
+nicholsonppp.list <- function
+### Fit a model for each simulation.
+(sims
+### List of simulations from nicholsonppp.
+ ){
+  lapply(sims,function(L)nicholsonppp(L$sim[,,L$p$gen]))
+### List of nicholson model fits.
+}
 
+sims <- sim.several.s(s,loci=100,generations=100)
+models <- nicholsonppp.list(sims)
+##save(sims,models,file="sims.models.Rdata")
 ##load(file="sims.models.Rdata")
-res.df <- ldply(1:length(models),
-                function(i)data.frame(ppp=models[[i]]$ppp,
-                                      type=sims[[i]]$s$type,
-                                      s=factor(s[i])))
-levels(res.df$s) <- format(s,digits=2)
+
+sims.neu <- sim.several.s(s,loci=100,generations=100,p.neutral=0.99)
+models.neu <- nicholsonppp.list(sims.neu)
+##save(sims,models,file="sims.models.Rdata")
+##load(file="sims.models.Rdata")
+
+sims.few <- sim.several.s(s,loci=100,generations=100,populations=4)
+models.few <- nicholsonppp.list(sims.few)
+##save(sims,models,file="sims.models.Rdata")
+##load(file="sims.models.Rdata")
+
+
+ppp.df <- function
+### Convert simulation and model fit lists to a data frame that can be
+### used for plotting diagnostics for the ppp-value classifier.
+(sims,
+### List of simulations.
+ models
+### List of nicholson model fits.
+ ){
+  res.df <- ldply(1:length(models),
+                  function(i)data.frame(ppp=models[[i]]$ppp,
+                                        type=sims[[i]]$s$type,
+                                        s=factor(s[i])))
+  levels(res.df$s) <- format(s,digits=2)
+  res.df
+### Data frame suitable for plotting densities or sensitivity.
+}
+
+
+
+## Plotting code, to be encapsulated in R functions:
 library(latticedl)
 subt <- deduce.param.label(do.call("cbind",sims[[1]]$p[display.params]))
 pdf("ppp-density-several-s.pdf",paper="a4",h=0,w=0)
@@ -85,18 +126,11 @@ plot(p1,split=c(1,1,2,1))
 plot(p2,split=c(2,1,2,1),newpage=FALSE)
 
 
-sim <- sims[[5]]
-write.table(round(sim$sim[,,sim$p$gen]*100),
-            file="/home/thocking/Desktop/testnich/Y_SIM_HMN",
-            quote=F,row.names=F,col.names=F)
-ppp <- read.table("~/Desktop/testnich/PPPval.out",header=TRUE)
-ppp <- ppp[ppp$POP==1,4]
-   
-compare <- function(v){
-  ppp5 <- melt(sapply(models,function(L)L[[v]]))
-  names(ppp5) <- c("locus","sim","value")
-  densityplot(~value,ppp5,groups=sim,main=v)
-}
+
+
+
+
+
 
 
 
