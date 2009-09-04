@@ -30,6 +30,39 @@ nicholsonppp.list <- function
   lapply(sims,function(L)nicholsonppp(L$sim[,,L$p$gen]))
 ### List of nicholson model fits.
 }
+ppp.df <- function
+### Convert simulation and model fit lists to a data frame that can be
+### used for plotting diagnostics for the ppp-value classifier.
+(sims,
+### List of simulations.
+ models
+### List of nicholson model fits.
+ ){
+  res.df <- ldply(1:length(models),
+                  function(i)data.frame(ppp=models[[i]]$ppp,
+                                        type=sims[[i]]$s$type,
+                                        s=max(sims[[i]]$s$s)))
+  res.df$s <- factor(res.df$s,labels=format(unique(res.df$s),digits=2))
+  res.df
+### Data frame suitable for plotting densities or sensitivity.
+}
+density.several.s <- function
+### Plot density curves for ppp values for each selection type, to
+### visualize the extent to which PPP-values can be used to indicate
+### selection state in a simulation.
+(df,
+### Data frame with columns ppp type s to be plotted.
+ ...
+### To be passed to dl.
+ ){
+  dl(densityplot,df,~ppp|s,type,
+     layout=c(1,nlevels(df$s)),n=500,
+     strip=strip.custom(strip.levels=c(TRUE,TRUE),strip.names=TRUE),
+     main="Small PPP-values indicate strong positive selection",
+     ...)
+### The lattice plot.
+}
+
 
 sims <- sim.several.s(s,loci=100,generations=100)
 models <- nicholsonppp.list(sims)
@@ -43,38 +76,16 @@ save(sims.neu,models.neu,file="sims.neu.models.Rdata")
 
 sims.few <- sim.several.s(s,loci=100,generations=100,populations=4)
 models.few <- nicholsonppp.list(sims.few)
-##save(sims,models,file="sims.models.Rdata")
-##load(file="sims.models.Rdata")
-
-
-ppp.df <- function
-### Convert simulation and model fit lists to a data frame that can be
-### used for plotting diagnostics for the ppp-value classifier.
-(sims,
-### List of simulations.
- models
-### List of nicholson model fits.
- ){
-  res.df <- ldply(1:length(models),
-                  function(i)data.frame(ppp=models[[i]]$ppp,
-                                        type=sims[[i]]$s$type,
-                                        s=factor(s[i])))
-  levels(res.df$s) <- format(s,digits=2)
-  res.df
-### Data frame suitable for plotting densities or sensitivity.
-}
-
+##save(sims.few,models.few,file="sims.few.models.Rdata")
+load(file="sims.few.models.Rdata")
+dfew <- ppp.df(sims.few,models.few)
+library(latticedl)
+subt <- deduce.param.label(do.call("cbind",sims.few[[1]]$p[display.params]))
+density.several.s(dfew)
 
 
 ## Plotting code, to be encapsulated in R functions:
-library(latticedl)
-subt <- deduce.param.label(do.call("cbind",sims[[1]]$p[display.params]))
 pdf("ppp-density-several-s.pdf",paper="a4",h=0,w=0)
-p1 <- dl(densityplot,res.df,~ppp|s,type,
-         layout=c(1,length(s)),n=500,sub=subt,
-         strip=strip.custom(strip.levels=c(TRUE,TRUE),strip.names=TRUE),
-         main="Small PPP-values indicate strong positive selection")
-plot(p1)
 dev.off()
 densityplot(~ppp|s,res.df,layout=c(1,length(s)),n=500)
 
