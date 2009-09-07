@@ -43,6 +43,7 @@ ppp.df <- function
                                         type=sims[[i]]$s$type,
                                         s=max(sims[[i]]$s$s)))
   res.df$s <- factor(res.df$s,labels=format(unique(res.df$s),digits=2))
+  attr(res.df,"N") <- sims[[1]]$p$n.loc
   res.df
 ### Data frame suitable for plotting densities or sensitivity.
 }
@@ -55,11 +56,13 @@ density.several.s <- function
  ...
 ### To be passed to dl.
  ){
-  dl(densityplot,df,~ppp|s,type,
-     layout=c(1,nlevels(df$s)),n=500,
-     strip=strip.custom(strip.levels=c(TRUE,TRUE),strip.names=TRUE),
-     main="Small PPP-values indicate strong positive selection",
-     ...)
+  p <- densityplot(~ppp|s,df,groups=type,
+                   layout=c(1,nlevels(df$s)),n=500,
+                   strip=strip.custom(
+                     strip.levels=c(TRUE,TRUE),strip.names=TRUE),
+                   main="Small PPP-values indicate strong positive selection",
+                   ...)
+  direct.label(p)
 ### The lattice plot.
 }
 
@@ -68,11 +71,14 @@ sims <- sim.several.s(s,loci=100,generations=100)
 models <- nicholsonppp.list(sims)
 ##save(sims,models,file="sims.models.Rdata")
 ##load(file="sims.models.Rdata")
-
 sims.neu <- sim.several.s(s,loci=100,generations=100,p.neutral=0.99,array.fun=ff)
 models.neu <- nicholsonppp.list(sims.neu)
 save(sims.neu,models.neu,file="sims.neu.models.Rdata")
 ##load(file="sims.models.Rdata")
+library(latticedl)
+neu.df <- ppp.df(sims.neu,models.neu)
+subt <- deduce.param.label(do.call("cbind",sims.neu[[1]]$p[display.params]))
+density.several.s(neu.df,sub=subt)
 
 sims.few <- sim.several.s(s,loci=100,generations=100,populations=4)
 models.few <- nicholsonppp.list(sims.few)
@@ -81,69 +87,70 @@ load(file="sims.few.models.Rdata")
 dfew <- ppp.df(sims.few,models.few)
 library(latticedl)
 subt <- deduce.param.label(do.call("cbind",sims.few[[1]]$p[display.params]))
-density.several.s(dfew)
+density.several.s(dfew,sub=subt)
+classify.loci(dfew,sub=subt)
 
 
-## Plotting code, to be encapsulated in R functions:
 pdf("ppp-density-several-s.pdf",paper="a4",h=0,w=0)
 dev.off()
-densityplot(~ppp|s,res.df,layout=c(1,length(s)),n=500)
 
-xmax <- 0.6
-ymax <- 21
-classify.group <- function(sdf){
-  i <- which(sdf$ppp<xmax)
-  cutoff <- c(0,sort(sdf$ppp[c(i,max(i)+1)]))
-  classify1 <- function(cutoff){
-    summarise(transform(sdf,guess=ppp<cutoff,positive=type=="positive"),
-              true.positive=sum(guess==TRUE&positive==TRUE),
-              false.positive=sum(guess==TRUE&positive==FALSE),
-              true.negative=sum(guess==FALSE&positive==FALSE),
-              false.negative=sum(guess==FALSE&positive==TRUE))
-  }
-  mdply(data.frame(cutoff),classify1)
-}
-cl <- ddply(res.df,.(s),classify.group)
-cl2 <- transform(cl,
-                 correct=true.positive+true.negative,
-                 incorrect=false.positive+false.negative)
-molt <- transform(melt(cl2,id=1:2),percent=value/sims[[1]]$p$n.loc*100)
-minrisk.panel <- function(x,y,group.number,...){
-  panel.xyplot(x=x,y=y,group.number=group.number,...)
-  best.y <- min(y)
-  best.x <- x[which(y==min(y))]
-  if(group.number==2 & y[1]!=best.y){
-    panel.abline(v=best.x,col="grey")
-    panel.abline(h=best.y,col="grey")
-    ltext(x=best.x,y=ymax,round(best.x,2),srt=90,adj=c(1,0),col="grey")
-    ltext(x=xmax,y=best.y,round(best.y,2),adj=c(1,0),col="grey")
-  }
-}
-## cool but useless:
-##dl(xyplot,molt,value~cutoff,variable,type='l')
-p2 <- dl(xyplot,subset(molt,variable%in%c("true.positive","incorrect")),
-         percent~cutoff|s,variable,
-         panel=minrisk.panel,
-         type='l',layout=c(1,nlevels(molt$s)),
-         xlim=c(-0.15,xmax),ylim=c(-2,ymax),
-         xlab="Percent of loci in simulation",
-         ylab="Cutoff for PPP-value decision rule",
-         main="Prediction rates change with PPP-value cutoffs",
-         sub=subt)
 pdf("ppp-classify-several-s.pdf",paper="a4",h=0,w=0)
-plot(p2)
 dev.off()
 
-plot(p1,split=c(1,1,2,1))
-plot(p2,split=c(2,1,2,1),newpage=FALSE)
-
-
-
-
-
-
-
-
-
+classify.loci <- function
+### Classify loci into selection or not.
+(res.df,
+### Result of ppp.df.
+ xmax=0.6,
+ xlim=c(-0.15,xmax),
+ ymax=21,
+ ylim=c(-2,ymax),
+ ...
+### Other arguments for xyplot.
+ ){
+  classify.group <- function(sdf){
+    i <- which(sdf$ppp<xmax)
+    cutoff <- c(0,sort(sdf$ppp[c(i,max(i)+1)]))
+    classify1 <- function(cutoff){
+      summarise(transform(sdf,guess=ppp<cutoff,positive=type=="positive"),
+                true.positive=sum(guess==TRUE&positive==TRUE),
+                false.positive=sum(guess==TRUE&positive==FALSE),
+                true.negative=sum(guess==FALSE&positive==FALSE),
+                false.negative=sum(guess==FALSE&positive==TRUE))
+    }
+    mdply(data.frame(cutoff),classify1)
+  }
+  cl <- ddply(res.df,.(s),classify.group)
+  cl2 <- transform(cl,
+                   correct=true.positive+true.negative,
+                   incorrect=false.positive+false.negative)
+  molt <- transform(melt(cl2,id=1:2),percent=value/attr(res.df,"N")*100)
+  minrisk.panel <- function(x,y,group.number,...){
+    panel.xyplot(x=x,y=y,group.number=group.number,...)
+    best.y <- min(y)
+    best.x <- x[which(y==min(y))]
+    if(group.number==2 & y[1]!=best.y){
+      panel.abline(v=best.x,col="grey")
+      panel.abline(h=best.y,col="grey")
+      ## to use grid eventually:
+      ltext(x=best.x,y=ymax,round(best.x,2),srt=90,adj=c(1,0),col="grey")
+      ltext(x=xmax,y=best.y,round(best.y,2),adj=c(1,0),col="grey")
+    }
+  }
+  ## cool but useless:
+  ##dl(xyplot,molt,value~cutoff,variable,type='l')
+  p2 <- xyplot(percent~cutoff|s,
+               subset(molt,variable%in%c("true.positive","incorrect")),
+               groups=variable,
+               panel=minrisk.panel,
+               type='l',layout=c(1,nlevels(molt$s)),
+               xlim=xlim,ylim=ylim,
+               xlab="Percent of loci in simulation",
+               ylab="Cutoff for PPP-value decision rule",
+               main="Prediction rates change with PPP-value cutoffs",
+               ...)
+  direct.label(p2)
+### The lattice plot.
+}
 
 
