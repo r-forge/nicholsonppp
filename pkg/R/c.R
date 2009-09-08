@@ -12,7 +12,7 @@ nppp.over.time <- function
 ### List of model fit result lists, with attributes from mlply.
 }
 
-c.df <- function
+estc.df <- function
 ### Convert list of model fit lists from nppp.over.time to a data
 ### frame suitable for plotting c values.
 (fit.list
@@ -36,12 +36,12 @@ c.df <- function
 ### Data frame for plotting the simulated and theoretical values of c.
 }
 
-c.over.time <- function
+estc.over.time <- function
 ### Plot evolution of C estimates over time. This is the
 ### differentiation parameter and is expected to increase linearly
 ### over time.
 (data,
-### Data frame to plot, result of c.df.
+### Data frame to plot, result of estc.df.
  ...
 ### Other arguments to qplot.
  ){

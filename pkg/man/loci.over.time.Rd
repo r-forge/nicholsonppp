@@ -4,13 +4,14 @@
 \title{ Allele frequency time series plots}
 \description{Plot allele frequency evolution over time for each locus, grouping by population color. This shows the difference between selection types and population colors.}
 \usage{
-loci.over.time(fr, pop.colors = pop.colors.default, generation = NULL, m = "Allele frequency evolution varies with selection type and population color")
+loci.over.time(fr, pop.colors = pop.colors.default, generation = NULL, m = "Allele frequency evolution varies with selection type and population color", popsize.enc = NULL)
 }
 \arguments{
   \item{fr}{Data frame of simulated allele frequencies.}
   \item{pop.colors}{Colors to use to distinguish populations (blue, neutral, red)}
   \item{generation}{Generation to emphasize, or NULL for no emphasis.}
   \item{m}{Main title.}
+  \item{popsize.enc}{Aesthetic to encode population size. lty or lwd work well. NULL means do not show population size.}
 }
 \details{
 }
