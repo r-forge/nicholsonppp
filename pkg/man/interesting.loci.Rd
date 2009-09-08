@@ -2,7 +2,7 @@
 \Rdversion{1.1}
 \alias{interesting.loci}
 \title{interesting loci}
-\description{Find a small subset of loci for each selection type, from a variety of ancestral frequencies. This will be used to show how allele frequency evolution depends on selection type on population color.}
+\description{Find a small subset of loci for each selection type, from a variety of ancestral frequencies. This will be used to show how allele frequency evolution depends on selection type and population color.}
 \usage{
 interesting.loci(fr)
 }

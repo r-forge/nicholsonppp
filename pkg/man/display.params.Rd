@@ -7,7 +7,7 @@
 \usage{display.params}
 \format{
   The format is:
- chr [1:7] "populations" "popsize" "generations" "n.locus" ...
+ chr [1:6] "populations" "popsize" "generations" "n.locus" ...
 }
 \details{
 }

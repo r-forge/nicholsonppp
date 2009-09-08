@@ -4,12 +4,12 @@
 \title{ Simulation summary plot}
 \description{Draw 3 simulation summary plots on the same screen (loci.over.time, anc.est.plot, fixation.endpoints).}
 \usage{
-sim.summary.plot(fr, g = 1, hilite.locus = NULL)
+sim.summary.plot(fr, g = NULL, hilite.locus = NULL)
 }
 \arguments{
   \item{fr}{Data frame from a simulation.}
-  \item{g}{Generation to plot in anc.est.plot and fixation.endpoints, and generation to emphasize in loci.over.time.}
-  \item{hilite.locus}{Locus to highlight in the plots.}
+  \item{g}{Generation to plot in anc.est.plot and fixation.endpoints, and generation to emphasize in loci.over.time. NULL means the last generation in the simulation.}
+  \item{hilite.locus}{Locus to highlight in the plots. NULL means choose an interesting locus under positive selection.}
 }
 \details{
 }
