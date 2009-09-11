@@ -37,9 +37,7 @@ loadpdf <- function
  ...
 ### To be passed to classify.loci.
  ){
-  print(desc)
-  desc <- if(desc=="orig")"" else paste('.',desc,sep="")
-  print(desc)
+  if(desc!="")desc <- paste('.',desc,sep="")
   lfile <- paste("sims",desc,".models.Rdata",sep="")
   simsname <- paste("sims",desc,sep="")
   modelsname <- paste("models",desc,sep="")
@@ -48,6 +46,7 @@ loadpdf <- function
   models <- get(modelsname)
   df <- ppp.df(sims,models)
   subt <- deduce.param.label(do.call("cbind",sims[[1]]$p[display.params]))
+  print(subt)
 
   makepdf <- function(fun.name){
     plot.fun <- get(fun.name)
@@ -70,5 +69,20 @@ loadpdf <- function
 ## loadpdf("few")
 ## loadpdf("neu",ymax=2)
 
-a <- mdply(data.frame(desc=c("orig","few","neu")),loadpdf)
-##TODO: ROC curves between the groups.
+a <- mdply(data.frame(desc=c("","few","neu"),viewer="none"),loadpdf)
+levels(a$desc) <- c("12 populations, 1000 loci",
+                    "4 populations, 1000 loci",
+                    "12 populations, 19999 loci")
+acl <- classify.loci(a)
+roc.loci(acl,layout=c(3,1),aspect=1)
+xyplot(sensitivity~1-specificity|s,acl,
+       type='l',
+       groups=desc,
+       panel=function(...){
+         panel.abline(0,1,col="grey")
+         panel.xyplot(...)
+       },
+       main="ROCs for several selection strengths",
+       auto.key=list(space="right",lines=TRUE,points=FALSE),
+       layout=c(1,5),
+       aspect=1)
