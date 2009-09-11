@@ -130,10 +130,13 @@ roc.loci <- function
                   panel.abline(0,1,col="grey")
                   panel.xyplot(...)
                 },
-                main="ROCs for several selection strengths",
+                main="ROCs vary with selection strength",
                 ...)
   direct.label(roc,method=function(...){
-    data.frame(perpendicular.lines(...),hjust=0)})
+    x <- data.frame(perpendicular.lines(...),hjust=0)
+    x[2,c("x","y")] <- c(0.6,0.8)
+    x
+  })
 ### The lattice plot.
 }
 
