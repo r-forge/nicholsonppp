@@ -76,7 +76,7 @@ classify.loci <- function
     }
     mdply(data.frame(cutoff),classify1)
   }
-  ddply(res.df,.(s),classify.group,cutoff)
+  ddply(res.df,.(s,desc),classify.group,cutoff)
 }
 
 cutoff.plot <- function
@@ -123,14 +123,15 @@ roc.loci <- function
  ...
 ### Arguments for xyplot.
  ){
-  roc <- xyplot(sensitivity~1-specificity,cl,
+  roc <- xyplot(sensitivity~1-specificity|desc,cl,
                 type='l',
                 groups=s,
                 panel=function(...){
                   panel.abline(0,1,col="grey")
                   panel.xyplot(...)
                 },
-                main="ROCs for several selection strengths")
+                main="ROCs for several selection strengths",
+                ...)
   direct.label(roc,method=function(...){
     data.frame(perpendicular.lines(...),hjust=0)})
 ### The lattice plot.
