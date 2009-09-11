@@ -74,7 +74,12 @@ levels(a$desc) <- c("12 populations, 1000 loci",
                     "4 populations, 1000 loci",
                     "12 populations, 19999 loci")
 acl <- classify.loci(a)
+
+pdf("roc-desc.pdf",h=6,w=8.5)
 roc.loci(acl,layout=c(3,1),aspect=1)
+dev.off()
+
+pdf("roc-s.pdf",h=0,w=0,paper="a4")
 xyplot(sensitivity~1-specificity|s,acl,
        type='l',
        groups=desc,
@@ -82,7 +87,8 @@ xyplot(sensitivity~1-specificity|s,acl,
          panel.abline(0,1,col="grey")
          panel.xyplot(...)
        },
-       main="ROCs for several selection strengths",
-       auto.key=list(space="right",lines=TRUE,points=FALSE),
+       main="ROCs vary with selection strength and number of populations",
+       auto.key=list(title="Simulation",space="right",lines=TRUE,points=FALSE),
        layout=c(1,5),
        aspect=1)
+dev.off()
