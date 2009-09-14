@@ -48,18 +48,18 @@ loadpdf <- function
   subt <- deduce.param.label(do.call("cbind",sims[[1]]$p[display.params]))
   print(subt)
 
-  makepdf <- function(fun.name){
+  makepdf <- function(fun.name,arg,dens){
     plot.fun <- get(fun.name)
     outf <- paste(fun.name,desc,".pdf",sep="")
     pdf(outf,paper="a4",h=0,w=0)
-    print(plot.fun(df,sub=subt,...))
+    print(plot.fun(arg,dens=dens,sub=subt,...))
     dev.off()
     cmd <- paste(viewer,outf,"&")
     system(cmd)
   }
 
-  ##makepdf("dens.several.s")
-  ##makepdf("classify.loci")
+  ##makepdf("dens.several.s",df)
+  makepdf("cutoff.plot",classify.loci(df),dens=df)
 
   df
 }
@@ -68,12 +68,14 @@ loadpdf <- function
 ## loadpdf()
 ## loadpdf("few")
 ## loadpdf("neu",ymax=2)
-
-a <- mdply(data.frame(desc=c("","few","neu"),viewer="none"),loadpdf)
+foo <- classify.loci(ppp <- ppp.df(sims,models))
+cutoff.plot(foo)
+a <- mdply(data.frame(desc=c("","few","neu"),viewer="xpdf"),loadpdf)
 levels(a$desc) <- c("12 populations, 1000 loci",
                     "4 populations, 1000 loci",
                     "12 populations, 19999 loci")
 acl <- classify.loci(a)
+cutoff.plot(acl)
 
 pdf("roc-desc.pdf",h=6,w=8.5)
 roc.loci(acl,layout=c(3,1),aspect=1)
