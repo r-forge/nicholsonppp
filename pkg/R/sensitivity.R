@@ -56,8 +56,6 @@ classify.loci <- function
 (res.df,
 ### Result of ppp.df.
  xmax=0.6,
- xlim=c(-0.15,xmax),
- ymax=21,
  ylim=c(-2,ymax),
  cutoff=seq(0,xmax,l=200)
 ### Vector of cutoff values to use for the classifier.
@@ -76,42 +74,128 @@ classify.loci <- function
     }
     mdply(data.frame(cutoff),classify1)
   }
-  ddply(res.df,.(s,desc),classify.group,cutoff)
+  splitby <- c("s")
+  if("desc"%in%names(res.df))splitby <- c(splitby,"desc")
+  ddply(res.df,splitby,classify.group,cutoff)
 }
+
+hilite.best <- function
+### panel.groups function for highlighting the best points by drawing
+### grey lines and labeling the actual values.
+(x,
+ y
+ ){
+  panel.abline(v=x,col="grey")
+  panel.abline(h=y,col="grey")
+
+  first.x <- x[1]
+  grid.text(round(first.x,2),unit(first.x,"native"),1,
+            rot=90,just=c("right","bottom"),gp=gpar(col="grey"))
+  
+  if(length(x)>1){
+    last.x <- x[length(x)]
+    grid.text(round(last.x,2),unit(last.x,"native"),1,
+              rot=90,just=c("right","top"),gp=gpar(col="grey"))
+  }
+  
+  grid.text(round(y,2),1,unit(y,"native"),
+            just=c("right","bottom"),gp=gpar(col="grey"))
+}
+
+panel.densityplot.offset <- function
+(x, darg = list(n = 30), plot.points = "jitter", ref = FALSE, 
+ groups = NULL, weights = NULL,
+ jitter.amount = 0.01 * diff(current.panel.limits()$ylim), 
+ type = "p",
+ ...){
+  if (ref) {
+    reference.line <- trellis.par.get("reference.line")
+    panel.abline(h = 0, col = reference.line$col, lty = reference.line$lty, 
+                 lwd = reference.line$lwd)
+  }
+  plot.line <- trellis.par.get("plot.line")
+  superpose.line <- trellis.par.get("superpose.line")
+  if (!is.null(groups)) {
+    panel.superpose(x, darg = darg, plot.points = plot.points, 
+                    ref = FALSE, groups = groups, weights = weights, 
+                    panel.groups = panel.densityplot,
+                    jitter.amount = jitter.amount, 
+                    type = type, ...)
+  }
+  else {
+    switch(as.character(plot.points),
+           `TRUE`=panel.xyplot(x = x,y = rep(0, length(x)), type = type, ...),
+           rug = panel.rug(x = x,start = 0, end = 0, x.units = c("npc", "native"), 
+                                                                                    type = type, ...), jitter = panel.xyplot(x = x, y = jitter(rep(0, 
+                                                                                                                                      length(x)), amount = jitter.amount), type = type, 
+                                                                                                         ...))
+    density.fun <- function(x, weights, subscripts = TRUE, 
+                            darg, ...) {
+      do.call("density", c(list(x = x, weights = weights[subscripts]), 
+                           darg))
+    }
+    if (sum(!is.na(x)) > 1) {
+      h <- density.fun(x = x, weights = weights, ..., darg = darg)
+      lim <- current.panel.limits()$xlim
+      id <- h$x > min(lim) & h$x < max(lim)
+      panel.lines(x = h$x[id], y = h$y[id], ...)
+    }
+  }
+}
+
 
 cutoff.plot <- function
 ### Plot prediction counts against cutoff values.
-(cl
+(cl,
 ### Data frame from classify.loci.
+ ylim=c(-3,21),
+### Limits for y axis.
+ xlim=c(-0.15,0.6),
+### Limits for x axis.
+ dens=NULL,
+### Optional density data to plot.
+ ...
+### args for xyplot.
  ){
   N <- sum(cl[1,3:6])
   cl2 <- transform(cl,
                    correct=true.positive+true.negative,
                    incorrect=false.positive+false.negative)
   molt <- transform(melt(cl2,id=1:2),percent=value/N*100)
-  minrisk.panel <- function(x,y,group.number,...){
+  minrisk.panel <- function(x,y,subscripts,group.number,...){
     panel.xyplot(x=x,y=y,group.number=group.number,...)
-    best.y <- min(y)
-    best.x <- x[which(y==min(y))]
-    if(group.number==2 & y[1]!=best.y){
-      panel.abline(v=best.x,col="grey")
-      panel.abline(h=best.y,col="grey")
-      ## to use grid eventually:
-      ltext(x=best.x,y=ymax,round(best.x,2),srt=90,adj=c(1,0),col="grey")
-      ltext(x=xmax,y=best.y,round(best.y,2),adj=c(1,0),col="grey")
+    if(group.number==2){
+      best.y <- min(y)
+      if(y[1]!=best.y){
+        best.x <- x[which(y==min(y))]
+        hilite.best(best.x,best.y)
+      }
     }
   }
   ## cool but useless:
   ##dl(xyplot,molt,value~cutoff,variable,type='l')
-  p2 <- xyplot(percent~cutoff|s,
-               subset(molt,variable%in%c("true.positive","incorrect")),
+  ss <- subset(molt,variable%in%c("true.positive","incorrect"))
+  ss$variable <- factor(ss$variable)
+  p2 <- xyplot(percent~cutoff|s,ss,
                groups=variable,
-               panel=minrisk.panel,
+               panel=function(subscripts,groups,...){
+                 panel.superpose(subscripts=subscripts,groups=groups,...)
+                 if(!is.null(dens)){
+                   d <- subset(dens,s==ss[subscripts,"s"][1])
+                   panel.superpose(d$ppp,y=NULL,1:nrow(d),d$type,
+                                   panel.groups=panel.rug,
+                                   end=0.05,
+                                   col=selection.colors.default)
+                 }
+               },
+               panel.groups=minrisk.panel,
                type='l',layout=c(1,nlevels(molt$s)),
-               xlim=xlim,ylim=ylim,
-               xlab="Percent of loci in simulation",
-               ylab="Cutoff for PPP-value decision rule",
+               xlim=xlim,
+               ylim=ylim,
+               ylab="Percent of loci in simulation",
+               xlab="Cutoff for PPP-value decision rule",
                main="Prediction rates change with PPP-value cutoffs",
+               par.settings=list(superpose.line=list(col=c("brown","orange"))),
                ...)
   direct.label(p2)
 ### The lattice plot.
