@@ -70,6 +70,11 @@ loadpdf <- function
 ## loadpdf("neu",ymax=2)
 foo <- classify.loci(ppp <- ppp.df(sims,models))
 cutoff.plot(foo)
+pdf("cutoff.pdf",paper="a4",h=0,w=0)
+cutoff.plot(foo,dens=ppp)
+dev.off()
+system(paste("xpdf","cutoff.pdf"))
+system(paste("lpr","cutoff.pdf"))
 a <- mdply(data.frame(desc=c("","few","neu"),viewer="xpdf"),loadpdf)
 levels(a$desc) <- c("12 populations, 1000 loci",
                     "4 populations, 1000 loci",
@@ -80,6 +85,7 @@ cutoff.plot(acl)
 pdf("roc-desc.pdf",h=6,w=8.5)
 roc.loci(acl,layout=c(3,1),aspect=1)
 dev.off()
+system(paste("xpdf","roc-desc.pdf"))
 
 pdf("roc-s.pdf",h=0,w=0,paper="a4")
 xyplot(sensitivity~1-specificity|s,acl,
