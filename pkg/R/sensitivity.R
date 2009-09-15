@@ -148,7 +148,7 @@ cutoff.plot <- function
 ### Plot prediction counts against cutoff values.
 (cl,
 ### Data frame from classify.loci.
- ylim=c(-3,21),
+ ylim=c(-5,21),
 ### Limits for y axis.
  xlim=c(-0.15,0.6),
 ### Limits for x axis.
@@ -164,7 +164,7 @@ cutoff.plot <- function
   molt <- transform(melt(cl2,id=1:2),percent=value/N*100)
   minrisk.panel <- function(x,y,subscripts,group.number,...){
     panel.xyplot(x=x,y=y,group.number=group.number,...)
-    if(group.number==2){
+    if(group.number==4){
       best.y <- min(y)
       if(y[1]!=best.y){
         best.x <- x[which(y==min(y))]
@@ -174,7 +174,7 @@ cutoff.plot <- function
   }
   ## cool but useless:
   ##dl(xyplot,molt,value~cutoff,variable,type='l')
-  ss <- subset(molt,variable%in%c("true.positive","incorrect"))
+  ss <- subset(molt,variable%in%c("true.positive","incorrect","false.positive","false.negative"))
   ss$variable <- factor(ss$variable)
   p2 <- xyplot(percent~cutoff|s,ss,
                groups=variable,
@@ -182,10 +182,10 @@ cutoff.plot <- function
                  panel.superpose(subscripts=subscripts,groups=groups,...)
                  if(!is.null(dens)){
                    d <- subset(dens,s==ss[subscripts,"s"][1])
-                   panel.superpose(d$ppp,y=NULL,1:nrow(d),d$type,
-                                   panel.groups=panel.rug,
-                                   end=0.05,
-                                   col=selection.colors.default)
+                   panel.superpose.dl(d$ppp,NULL,1:nrow(d),d$type,
+                                      panel.groups="panel.rug",
+                                      end=0.05,
+                                      col=selection.colors.default)
                  }
                },
                panel.groups=minrisk.panel,
@@ -195,9 +195,13 @@ cutoff.plot <- function
                ylab="Percent of loci in simulation",
                xlab="Cutoff for PPP-value decision rule",
                main="Prediction rates change with PPP-value cutoffs",
-               par.settings=list(superpose.line=list(col=c("brown","orange"))),
+               par.settings=list(superpose.line=list(col=c("brown","orange","violet","darkblue"))),
                ...)
-  direct.label(p2)
+  direct.label(p2,method=function(...){
+    d <- first.points(...)
+    d$vjust <- c(1,0)
+    d
+  })
 ### The lattice plot.
 }
 roc.loci <- function
