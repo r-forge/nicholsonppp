@@ -32,10 +32,8 @@ loadpdf <- function
 ### Load a data set and plot it.
 (desc="",
 ### Data set description.
- viewer="xpdf",
+ viewer="xpdf"
 ### program to view output.
- ...
-### To be passed to classify.loci.
  ){
   if(desc!="")desc <- paste('.',desc,sep="")
   lfile <- paste("sims",desc,".models.Rdata",sep="")
@@ -48,23 +46,29 @@ loadpdf <- function
   subt <- deduce.param.label(do.call("cbind",sims[[1]]$p[display.params]))
   print(subt)
 
-  makepdf <- function(fun.name,arg,dens){
+  makepdf <- function(fun.name,arg,...){
     plot.fun <- get(fun.name)
     outf <- paste(fun.name,desc,".pdf",sep="")
-    pdf(outf,paper="a4",h=0,w=0)
-    print(plot.fun(arg,dens=dens,sub=subt,...))
+    pdf(outf,h=14,w=10)
+    print(plot.fun(arg,sub=subt,...))
     dev.off()
     cmd <- paste(viewer,outf,"&")
     system(cmd)
   }
 
-  ##makepdf("dens.several.s",df)
+  makepdf("dens.several.s",df)
   makepdf("cutoff.plot",classify.loci(df),dens=df)
 
   df
 }
 
-
+load("/home/thocking/nicholsonppp/pkg/etc/sims.neu.models.Rdata")
+df.neu <- ppp.df(sims.neu,models.neu)
+cl.neu <- classify.loci(df.neu)
+pdf("cutoff.plot.neu.pdf",h=14,w=10,paper="a4")
+cutoff.plot(cl.neu,dens=df.neu,ylim=c(-5,21)/10)
+dev.off()
+ 
 ## loadpdf()
 ## loadpdf("few")
 ## loadpdf("neu",ymax=2)
@@ -75,6 +79,8 @@ cutoff.plot(foo,dens=ppp)
 dev.off()
 system(paste("xpdf","cutoff.pdf"))
 system(paste("lpr","cutoff.pdf"))
+
+
 a <- mdply(data.frame(desc=c("","few","neu"),viewer="xpdf"),loadpdf)
 levels(a$desc) <- c("12 populations, 1000 loci",
                     "4 populations, 1000 loci",
