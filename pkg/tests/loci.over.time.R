@@ -1,5 +1,5 @@
 library(nicholsonppp)
-sim <- sim.drift.selection()
+sim <- sim.drift.selection(s=0.5,generations=100)
 df <- sim2df(sim)
 df.i <- interesting.loci(df)
 stopifnot(nrow(df.i)/nrow(df)*sim$p$n.locus==6)

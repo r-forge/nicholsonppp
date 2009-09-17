@@ -16,6 +16,7 @@ display.params <- c("populations",
                     'generations',
                     'n.locus',
                     'p.neutral',
+                    "s",
                     'loci.per.s.value')
 
 deduce.param.label <- function # Deduce parameters for plot subtitles
@@ -26,6 +27,7 @@ deduce.param.label <- function # Deduce parameters for plot subtitles
 ### Vector of column names to be searched and reported.
  ){
   lt <- as.data.frame(lt)
+  imp <- imp[imp%in%names(lt)]
   L <- sapply(imp,function(cn)if(cn%in%names(lt)){
     tmp <- unique(lt[[cn]])
     if(is.numeric(tmp))tmp <- round(tmp,digits=2)
@@ -185,27 +187,56 @@ fixation.endpoints <- function # Plot allele frequency by selection type
 ### The lattice plot.
 }
 
-anc.est.plot <- function # Ancestral estimate plot
-### Plot naive estimates of ancestral allele frequency versus actual
-### values from the simulation, to see if they agree.
-(fr,
+anc.est.naive <- function # Naive ancestral allele frequency estimates
+### Estimate ancestral allele frequencies by simply taking the mean of
+### all the current observations. This is a simple statistic we can
+### use to reality check the model estimates, and which are fast
+### enough to calculate for each generation in the simulation,
+### facilitating animations.
+(fr
 ### Subset of simulation data frame containing the generation of
-### interest to estimate and plot.
- hilite.locus=NULL,
-### Locus number to highlight on the plot with a circle. NULL means do
-### not highlight.
- sub=deduce.param.label(attr(fr,"parameters")),
-### Subtitle for the plot.
- selection.colors=selection.colors.default,
-### Colors for the different selection types (balancing, neutral, positive)
- selection.symbols=selection.symbols.default
-### Symbols for the different selection types (balancing, neutral, positive)
+### interest from which we estimate the ancestral frequency.
  ){
   est.df <- ddply(fr,.(locus),summarise,
                   ancestral.est=mean(simulated),
                   ancestral=ancestral[1],
                   type=type[1])
-  xyplot(ancestral.est~ancestral,est.df,
+  attr(est.df,"parameters") <- attr(fr,"parameters")
+  est.df
+### Data frame with a row for each locus, summarizing naive ancestral
+### allele frequencies in the ancestral.est column.
+}
+
+anc.est.nicholson <- function
+### Ancestral allele frequency estimate given by Nicholson model.
+(sim,
+ model
+ ){
+  data.frame(sim$s,ancestral.est=model$p)
+}
+
+anc.est.plot <- function # Ancestral estimate plot
+### Plot naive estimates of ancestral allele frequency versus actual
+### values from the simulation, to see if they agree.
+(est.df,
+### Data frame describing loci and ancestral estimates. Need columns
+### type ancestral ancestral.est.
+ hilite.locus=NULL,
+### Locus number to highlight on the plot with a circle. NULL means do
+### not highlight.
+ sub=deduce.param.label(attr(est.df,"parameters")),
+### Subtitle for the plot.
+ selection.colors=selection.colors.default,
+### Colors for the different selection types (balancing, neutral, positive)
+ selection.symbols=selection.symbols.default,
+### Symbols for the different selection types (balancing, neutral, positive)
+ f=ancestral.est~ancestral,
+### Plot formula for xyplot.
+ xlab="Simulated blue allele frequency",
+ ylab="Estimated blue allele frequency",
+ main="Allele frequency estimates vary with selection type"
+ ){
+  xyplot(f,est.df,
          alpha=1,
          cols=selection.colors,
          groups=type,
@@ -220,13 +251,14 @@ anc.est.plot <- function # Ancestral estimate plot
                              pch=selection.symbols,
                              cex=1.2,
                              col=selection.colors)),
+         strip=strip.custom(strip.names=TRUE),
          sub=sub,
          ylim=c(0,1),
          xlim=c(0,1),
          aspect=1,
-         xlab="Simulated blue allele frequency",
-         ylab="Estimated blue allele frequency",
-         main="Allele frequency estimates vary with selection type",
+         xlab=xlab,
+         ylab=ylab,
+         main=main,
          auto.key=list(space="right",
            title="Selection type",cex.title=cex.title))
 ### The lattice plot.
@@ -259,7 +291,7 @@ sim.summary.plot <- function # Simulation summary plot
                       generation=g,
                       m="Allele frequency evolution for 1 locus")
   print(p,vp=vpl(1,1))
-  aep <- anc.est.plot(ss,hilite.locus=hilite.locus,sub=NULL)
+  aep <- anc.est.plot(anc.est.naive(ss),hilite.locus=hilite.locus,sub=NULL)
   pushViewport(vpl(1,2));print(aep,newpage=FALSE);popViewport()
   fe <- fixation.endpoints(ss,hilite.locus=hilite.locus)
   pushViewport(vpl(2,1:2));print(fe,newpage=FALSE);popViewport()
