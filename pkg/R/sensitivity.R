@@ -39,46 +39,22 @@ dens.several.s <- function
 ### selection state in a simulation.
 (df,
 ### Data frame with columns ppp type s to be plotted.
+ f=~ppp|s,
+### Lattice plot formula for densityplot.
+ main="Small PPP-values indicate strong positive selection",
  ...
 ### To be passed to densityplot.
  ){
-  p <- densityplot(~ppp|s,df,groups=type,
-                   layout=c(1,nlevels(df$s)),n=500,
+  layout <- if(missing(f))c(1,nlevels(df$s)) else NULL
+  p <- densityplot(f,df,groups=type,
+                   layout=layout,n=500,
                    strip=strip.custom(
                      strip.levels=c(TRUE,TRUE),strip.names=TRUE),
-                   main="Small PPP-values indicate strong positive selection",
+                   main=main,
                    ...)
   direct.label(p)
 ### The lattice plot.
 }
-classify.loci <- function
-### Classify loci into selection or not.
-(res.df,
-### Result of ppp.df.
- xmax=0.6,
- ylim=c(-2,ymax),
- cutoff=seq(0,xmax,l=200)
-### Vector of cutoff values to use for the classifier.
- ){
-  classify.group <- function(sdf,cutoff=NULL){
-    i <- which(sdf$ppp<xmax)
-    if(is.null(cutoff))cutoff <- c(0,sort(sdf$ppp[c(i,max(i)+1)]))
-    classify1 <- function(cutoff){
-      summarise(transform(sdf,guess=ppp<cutoff,positive=type=="positive"),
-                true.positive=sum(guess==TRUE&positive==TRUE),
-                false.positive=sum(guess==TRUE&positive==FALSE),
-                true.negative=sum(guess==FALSE&positive==FALSE),
-                false.negative=sum(guess==FALSE&positive==TRUE),
-                sensitivity=sum(guess==TRUE&positive==TRUE)/sum(positive),
-                specificity=1-sum(guess==TRUE&positive==FALSE)/sum(!positive))
-    }
-    mdply(data.frame(cutoff),classify1)
-  }
-  splitby <- c("s")
-  if("desc"%in%names(res.df))splitby <- c(splitby,"desc")
-  ddply(res.df,splitby,classify.group,cutoff)
-}
-
 hilite.best <- function
 ### panel.groups function for highlighting the best points by drawing
 ### grey lines and labeling the actual values.
@@ -101,49 +77,33 @@ hilite.best <- function
   grid.text(round(y,2),1,unit(y,"native"),
             just=c("right","bottom"),gp=gpar(col="grey"))
 }
-
-panel.densityplot.offset <- function
-(x, darg = list(n = 30), plot.points = "jitter", ref = FALSE, 
- groups = NULL, weights = NULL,
- jitter.amount = 0.01 * diff(current.panel.limits()$ylim), 
- type = "p",
- ...){
-  if (ref) {
-    reference.line <- trellis.par.get("reference.line")
-    panel.abline(h = 0, col = reference.line$col, lty = reference.line$lty, 
-                 lwd = reference.line$lwd)
-  }
-  plot.line <- trellis.par.get("plot.line")
-  superpose.line <- trellis.par.get("superpose.line")
-  if (!is.null(groups)) {
-    panel.superpose(x, darg = darg, plot.points = plot.points, 
-                    ref = FALSE, groups = groups, weights = weights, 
-                    panel.groups = panel.densityplot,
-                    jitter.amount = jitter.amount, 
-                    type = type, ...)
-  }
-  else {
-    switch(as.character(plot.points),
-           `TRUE`=panel.xyplot(x = x,y = rep(0, length(x)), type = type, ...),
-           rug = panel.rug(x = x,start = 0, end = 0, x.units = c("npc", "native"), 
-                                                                                    type = type, ...), jitter = panel.xyplot(x = x, y = jitter(rep(0, 
-                                                                                                                                      length(x)), amount = jitter.amount), type = type, 
-                                                                                                         ...))
-    density.fun <- function(x, weights, subscripts = TRUE, 
-                            darg, ...) {
-      do.call("density", c(list(x = x, weights = weights[subscripts]), 
-                           darg))
+classify.loci <- function
+### Classify loci into selection or not.
+(res.df,
+### Result of ppp.df.
+ xmax=0.6,
+ ylim=c(-2,ymax),
+ cutoff=seq(0,xmax,l=200),
+### Vector of cutoff values to use for the classifier.
+ splitby=c("s")
+ ){
+  classify.group <- function(sdf,cutoff=NULL){
+    i <- which(sdf$ppp<xmax)
+    if(is.null(cutoff))cutoff <- c(0,sort(sdf$ppp[c(i,max(i)+1)]))
+    classify1 <- function(cutoff){
+      summarise(transform(sdf,guess=ppp<cutoff,positive=type=="positive"),
+                true.positive=sum(guess==TRUE&positive==TRUE),
+                false.positive=sum(guess==TRUE&positive==FALSE),
+                true.negative=sum(guess==FALSE&positive==FALSE),
+                false.negative=sum(guess==FALSE&positive==TRUE),
+                sensitivity=sum(guess==TRUE&positive==TRUE)/sum(positive),
+                specificity=1-sum(guess==TRUE&positive==FALSE)/sum(!positive))
     }
-    if (sum(!is.na(x)) > 1) {
-      h <- density.fun(x = x, weights = weights, ..., darg = darg)
-      lim <- current.panel.limits()$xlim
-      id <- h$x > min(lim) & h$x < max(lim)
-      panel.lines(x = h$x[id], y = h$y[id], ...)
-    }
+    mdply(data.frame(cutoff),classify1)
   }
+  if("desc"%in%names(res.df))splitby <- c(splitby,"desc")
+  ddply(res.df,splitby,classify.group,cutoff)
 }
-
-
 cutoff.plot <- function
 ### Plot prediction counts against cutoff values.
 (cl,
@@ -154,6 +114,8 @@ cutoff.plot <- function
 ### Limits for x axis.
  dens=NULL,
 ### Optional density data to plot.
+ f=percent~cutoff|s,
+### Plot formula for xyplot.
  ...
 ### args for xyplot.
  ){
@@ -176,7 +138,7 @@ cutoff.plot <- function
   ##dl(xyplot,molt,value~cutoff,variable,type='l')
   ss <- subset(molt,variable%in%c("true.positive","incorrect","false.positive","false.negative"))
   ss$variable <- factor(ss$variable)
-  p2 <- xyplot(percent~cutoff|s,ss,
+  p2 <- xyplot(f,ss,
                groups=variable,
                panel=function(subscripts,groups,...){
                  panel.superpose(subscripts=subscripts,groups=groups,...)
@@ -208,12 +170,13 @@ roc.loci <- function
 ### Plot ROC curves of loci classification for several s values.
 (cl,
 ### Result of classify.loci.
+ f=sensitivity~1-specificity|desc,
+### Plot formula for xyplot.
  ...
 ### Arguments for xyplot.
  ){
-  roc <- xyplot(sensitivity~1-specificity|desc,cl,
+  roc <- xyplot(f,cl,
                 type='l',
-                groups=s,
                 panel=function(...){
                   panel.abline(0,1,col="grey")
                   panel.xyplot(...)
