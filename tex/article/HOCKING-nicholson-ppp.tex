@@ -13,36 +13,39 @@
 
 \section{Results}
 
-\newcommand{\fig}[2]{
+\newcommand{\fig}[3][1]{
   \begin{figure}[ht]
-    \includegraphics[width=\textwidth]{#1}
-    \caption{#2}
+    \begin{center}
+    \includegraphics[width=#1\textwidth]{#2}
+    \end{center}
+    \caption{#3\label{#2}}
   \end{figure}
 }
 
+foo bar
 
-\fig{2009-08-27-notbeta.pdf}{foo}
-\fig{anc-est-plot.pdf}{foo}
-\fig{beta.pdf}{foo}
-\fig{c-over-time-all.pdf}{foo}
-\fig{c-over-time-diff.pdf}{foo}
-\fig{c-over-time-same.pdf}{foo}
-\fig{cutoff-plot-few.pdf}{foo}
-\fig{cutoff-plot-neu.pdf}{foo}
-\fig{cutoff-plot.pdf}{foo}
-\fig{dens-several-s-few.pdf}{foo}
-\fig{dens-several-s-neu.pdf}{foo}
-\fig{dens-several-s.pdf}{foo}
-\fig{fixation-endpoints.pdf}{foo}
-\fig{gen-pop-dens.pdf}{foo}
-\fig{gen-pop.pdf}{foo}
-\fig{gen-pop-roc.pdf}{foo}
-\fig{loci-over-time}{Allele frequency evolution of 6 loci in 12
-  populations over 100 generations.}
-\fig{roc-desc.pdf}{foo}
-\fig{roc-s.pdf}{foo}
-\fig{sim-summary-plot.pdf}{foo}
-\fig{fixation-selection.png}{foo}
+\fig{2009-08-27-notbeta}{foo}
+\fig{anc-est-plot}{foo}
+\fig[0.5]{beta}{foo}
+\fig[0.5]{c-over-time-all}{foo}
+\fig[0.5]{c-over-time-diff}{foo}
+\fig[0.5]{c-over-time-same}{foo}
+\fig[0.8]{cutoff-plot-few}{foo}
+\fig[0.8]{cutoff-plot-neu}{foo}
+\fig[0.8]{cutoff-plot}{foo}
+\fig[0.8]{dens-several-s-few}{foo}
+\fig[0.8]{dens-several-s-neu}{foo}
+\fig[0.8]{dens-several-s}{foo}
+\fig{fixation-endpoints}{foo}
+\fig{gen-pop-dens}{foo}
+%\fig{gen-pop}{foo}
+\fig{gen-pop-roc}{foo}
+%\fig{loci-over-time}{Allele frequency evolution of 6 loci in 12
+%  populations over 100 generations.}
+\fig{roc-desc}{foo}
+\fig[0.8]{roc-s}{foo}
+\fig{sim-summary-plot}{foo}
+%\fig[0.5]{fixation-selection}{foo}
 
 \section{Conclusions}
 
