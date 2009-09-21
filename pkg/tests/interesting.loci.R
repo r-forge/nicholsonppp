@@ -1,5 +1,5 @@
 library(nicholsonppp)
 sim <- sim.drift.selection()
 s.i <- interesting.loci(sim$s)
-print(s.i)
 stopifnot(nrow(s.i)==6)
+print(s.i)
