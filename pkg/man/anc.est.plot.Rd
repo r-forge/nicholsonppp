@@ -4,14 +4,21 @@
 \title{ Ancestral estimate plot}
 \description{Plot naive estimates of ancestral allele frequency versus actual values from the simulation, to see if they agree.}
 \usage{
-anc.est.plot(fr, hilite.locus = NULL, sub = deduce.param.label(attr(fr, "parameters")), selection.colors = selection.colors.default, selection.symbols = selection.symbols.default)
+anc.est.plot(est.df, hilite.locus = NULL, sub = deduce.param.label(attr(est.df, "parameters")), selection.colors = selection.colors.default, selection.symbols = selection.symbols.default, f = ancestral.est ~ ancestral, xlab = "Simulated blue allele frequency", ylab = "Estimated blue allele frequency", main = "Allele frequency estimates vary with selection type")
 }
 \arguments{
-  \item{fr}{Subset of simulation data frame containing the generation of interest to estimate and plot.}
+  \item{est.df}{Data frame describing loci and ancestral estimates. Need columns type ancestral ancestral.est.}
   \item{hilite.locus}{Locus number to highlight on the plot with a circle. NULL means do not highlight.}
   \item{sub}{Subtitle for the plot.}
   \item{selection.colors}{Colors for the different selection types (balancing, neutral, positive)}
   \item{selection.symbols}{Symbols for the different selection types (balancing, neutral, positive)}
+  \item{f}{Plot formula for xyplot.}
+  \item{xlab}{
+}
+  \item{ylab}{
+}
+  \item{main}{
+}
 }
 \details{
 }
@@ -28,4 +35,5 @@ anc.est.plot(fr, hilite.locus = NULL, sub = deduce.param.label(attr(fr, "paramet
 \examples{library(nicholsonppp)
 sim <- sim.drift.selection()
 df <- sim2df(sim)
-anc.est.plot(df[df$generation==sim$p$gen,])}
+est <- anc.est.naive(df[df$generation==sim$p$gen,])
+anc.est.plot(est)}
