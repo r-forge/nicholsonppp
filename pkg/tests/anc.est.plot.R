@@ -1,4 +1,5 @@
 library(nicholsonppp)
 sim <- sim.drift.selection()
 df <- sim2df(sim)
-anc.est.plot(df[df$generation==sim$p$gen,])
+est <- anc.est.naive(df[df$generation==sim$p$gen,])
+anc.est.plot(est)
