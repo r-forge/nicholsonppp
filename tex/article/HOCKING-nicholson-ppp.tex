@@ -1,7 +1,7 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage{graphicx}
 \usepackage{hyperref}
-\usepackage[all]{xypic}
+\usepackage[all]{xy}
 \usepackage{amsmath,amssymb}
 
 \title{Identifying loci under selective pressure using a PPP-value classifier}
@@ -166,7 +166,7 @@ is the population allele frequency for locus $i$ and population
 $j$. This quantity is in turned modeled by $\alpha_{ij}\sim N(\pi_i,
 c_j \pi_i(1-\pi_i))$, a normal distribution truncated to the interval
 [0,1]. The differentiation parameter $c_j$ is motivated by population
-genetics (see section 2.2, \cite{nicholson}). The distributions of the
+genetics \cite[section 2.2]{nicholson}. The distributions of the
 hyperparameter for ancestral allele frequency follows $\pi_i\sim
 \beta(a,a)$ and the population divergence parameter follows $c_j\sim
 U[0,1]$.
@@ -204,6 +204,7 @@ p_i^t =
 \frac{Y_{ij}}{N_{ij}} - \pi_i^t
 \right)^2\\
 0 & \text{otherwise}
+\end{cases}
 $$
 
 Thus the PPP-value for locus $i$ is given by
@@ -214,30 +215,98 @@ $$
 
 \section{Results}
 
-
-Loci fixation?
-
- Some alleles can be fixed at the end of the simulation,
-  $\aij\in\{0,1\}$
- Since we are modeling Single Nucleotide Polymorphisms the data
-  are probably not fixed.
- We can consider non-fixed loci only, for the model fitting
-  later.
- Criteria:
-\begin{description}
-\item[not.all.fixed] Throw out the locus if all subpopulations fixed.
-\item[none.fixed] Throw out the locus if one or more subpopulations fixed.
-\end{description}
-
-
 \subsection{Simulation verification}
 
+After obtaining allele frequencies from the simulator, we can do
+diagnostic plots to visually verify that the allele frequencies are
+evolving according to the theoretical evolution framework we had
+envisioned. R packages lattice and ggplot2 are used to visualize these
+multivariate data \cite{lattice,ggplot2}.
+
+First, we checked how allele frequencies evolve over time for just a
+few loci (\autoref{loci-over-time}). The loci examined show no signs
+of departure from the hypotheses of our evolution simulator.
+
 \fig{loci-over-time}{Allele frequency evolution of 6 loci in 12
-  populations over 100 generations.}
+  populations over 100 generations. Each panel represents a different
+  locus, and each line therein represents a different
+  population. Shown are two loci for balancing selection (left), no
+  selection (middle), and positive selection (right).}
 
-\fig[0.5]{fixation-selection}{foo}
+However, to verify that all loci behave according to expectations, we
+used dotplots of final allele frequency
+(\autoref{fixation-endpoints}). These dotplots efficiently show that
+the loci evolved according to the simulator hypotheses.
 
-\fig{sim-summary-plot}{foo}
+\fig{fixation-endpoints}{Final simulated blue allele frequency for
+  1000 loci and 12 populations is shown in a dotplot. Loci are ordered
+  on the horizontal axis by ancestral allele frequency, and then
+  divided into 3 panels by selection state. Note that loci under
+  selection display no signs of selective pressure when in neutral
+  color populations. Inversely, all loci which are not under selection
+  behave similarly, regardless of population color. Also, the symmetry
+  between blue and red alleles is clearly visible.}
+
+\subsection{Characterization of loci fixation on model fit}
+
+The dotplots above also clearly show that the loci under selection
+tend to get fixed at frequencies of 0 or 1 by the end of the
+simulation. These data seem to violate the initial hypothesis that we
+are dealing with SNP data. That is, data from SNP microarrays is
+necessarily biased to favor loci which we have already observed are
+polymorphic. This phenomenon is called the ``recruitment bias'' in the
+literature.
+
+To characterize if the model estimates are sensitive to the
+recruitment bias, we fit several models using non-fixed subsets of the
+loci. The criteria used for calling a locus ``fixed'' are as follows:
+\begin{description}
+\item[not.all.fixed] Throw out the locus if all subpopulations fixed
+  (more stringent criterion; less loci will be ``fixed'').
+\item[none.fixed] Throw out the locus if one or more subpopulations
+  fixed (less stringent criterion; more loci will be ``fixed'').
+\end{description}
+
+\fig{fixation-selection}{Percent of loci left after throwing out
+  ``fixed'' loci, according to 2 criteria outlined in the text. Note
+  how loci under strong positive selection are the loci which get
+  excluded.}
+
+To evaluate the effect of throwing out these loci on the total number
+of loci left for input to the model, we made scatterplots of percent
+of loci ``not fixed'' versus selection strength $s_i$
+(\autoref{fixation-selection}). Essentially this told us that loci
+under strong positive selection tend to be the ones which get called
+``fixed'' and excluded from the model.
+
+\fig{fixed}{Scatterplots of estimated and simulated ancestral allele
+  frequency. The Nicholson model was fit for all loci, and 2 subsets
+  of loci which were ``not fixed'' (see text). Also shown are large
+  and small proportions of neutral loci. Note that the model estimates
+  behave similarly regardless of the number of loci included in the
+  model.}
+
+To examine if there are any large differences between model estimates
+when fixed data are not included, we made scatterplots of estimated
+versus simulated ancestral allele frequency $\pi_i$ values
+(\autoref{fixed}). This plot indicates that the model fits are
+similar, regardless of the number of loci included in the dataset.
+
+Thus we can conclude that no harm is done by leaving in the ``fixed''
+loci, and we proceed with the rest of our analyses using all of the
+simulated loci.
+
+\subsection{Simulation summaries using animations}
+
+\fig{sim-summary-plot}{The simulation summary diagnostic plot. Note
+  how there is a time series plot for a single locus in the upper
+  left. That same locus is highlighted with a circle in the upper
+  right ancestral estimate plot, and with a vertical line in the
+  bottom dotplot.}
+
+To visualize 3 of the above simulation diagnostics at once, we made
+combined plots of allele frequency time series, ancestral estimates,
+and dotplots \autoref{sim-summary-plot}.
 
 To visualize the influence of the number of generations on each of
 these diagnostic plots, we used to the animation
@@ -269,7 +338,21 @@ website:
 \fig[0.5]{c-over-time-all}{foo} \fig[0.5]{c-over-time-diff}{foo}
 \fig[0.5]{c-over-time-same}{foo} \fig[0.8]{cutoff-plot-few}{foo}
 
-\subsection{Sensitivity of the PPP-value classifier}
+\subsection{Prediction rates of the PPP-value classifier}
+
+To evaluate the sensitivity and specificity of the PPP-value
+classifier, we fit the model on 3 simulations with different parameter
+values:
+
+\begin{tabular}{rrr}
+  Simulation & Populations & Loci \\
+  \hline
+  1 & 12 & 1000 \\
+  2 & 4 & 1000\\
+  3 & 12 & 19999
+\end{tabular}
+
+For each of these, 
 
 \fig[0.8]{dens-several-s-few}{foo} 
 \fig[0.8]{dens-several-s-neu}{foo}
@@ -277,7 +360,6 @@ website:
 \fig[0.8]{cutoff-plot-neu}{foo}
 \fig[0.8]{cutoff-plot}{foo}
 \fig[0.8]{dens-several-s}{foo}
-\fig{fixation-endpoints}{foo}
 \fig{gen-pop-dens}{foo}
 \fig{gen-pop}{foo}
 %\fig{gen-pop-roc}{foo}
@@ -285,5 +367,8 @@ website:
 %\fig[0.8]{roc-s}{foo}
 
 \section{Conclusions}
+
+\bibliographystyle{plain}
+\bibliography{refs}
 
 \end{document}
