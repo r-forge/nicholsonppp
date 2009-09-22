@@ -1,6 +1,7 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage[all]{xypic}
 \usepackage{amsmath,amssymb}
 
 \title{Identifying loci under selective pressure using a PPP-value classifier}
@@ -36,35 +37,77 @@
 
 \section{Introduction}
 
-foo
+The explosion of molecular marker data in animal populations from
+technologies such as Single Nucleotide Polymorphism (SNP) microarrays
+opens new avenues of research for population genetics. These data
+allow testing of many aspects of our current models of population
+genetics, such as the evolutionary status of these markers relative to
+selective pressures. One area we are interested in is the estimation
+of genetic differentiation between populations, and establishing
+methods for determining which markers and genomic regions have been
+under selective pressure. Genomic areas under selection are areas with
+probable functional significance, thus the goal is to develop methods
+we can use to identify functional genes and augment the current state
+of functional annotations for domestic animal genomes.
 
- Domestic cows (\emph{Bos taurus}) have been selected over
-  thousands of years for milk production, meat production, resistence
-  to disease, etc.
+In the last several decades, the statistical tools of biologists and
+geneticists have evolved considerably. In particular, modern computers
+and stochastic methods such as Markov Chain Monte Carlo (MCMC) allow
+for complex Bayesian models of evolutionary systems. In this work, we
+investigate one such Bayesian model used to describe evolution of
+domestic animation populations, and extend it with a classifier for
+markers under selection.
 
- But how is this differential selection reflected in their
-  genome?
+The model of domestic animal evolution that we consider in this work
+is the hierarchical Bayesian model of Nicholson \etal
+(2002)\cite{nicholson}, hereafter referred to as the Nicholson
+model. This model attempts to estimate ancestral population allele
+frequencies for each marker, and a measure of divergence for each
+population which is analogous to the classical $F_{st}$ of population
+genetics.
 
- We can genotype a cow at 60,000 SNPs, and compare these
-  genotypes between modern domestic populations.
+The new idea put forth in this work is a classifier for markers under
+selection, based on Posterior Predictive P-values
+(PPP-values)\cite{pppvalues}. Essentially these PPP-values are the
+Bayesian analogue of the usual frequentist P-values, which indicate
+departures from the model hypotheses. The Nicholson model was designed
+for, and accurately models, independently evolution populations under
+genetic drift. However, loci under selection in addition to genetic
+drift represent departures from the model hypotheses. Thus we use
+PPP-values estimates from the model to identify these aberrent loci.
 
- The question: can we derive a statistic -- a ``signature of
-  selection'' -- that indicates a genomic region has been under
-  selection?
+Furthermore, we validate the model using a simulation of evolution by
+genetic drift and selection. The simulator has been implemented using
+the R programming language\cite{R}. The model fitting has been
+implemented using compiled FORTRAN code dynamically linked to R. The
+analysis and graphics discussed in this article can be reproduced by
+using the code published in the R package \texttt{nicholsonppp} on
+R-Forge\cite{R-Forge}:
 
- A possible answer: Nicholson \etal (2002) estimate ancestral
-  population allele frequencies from SNP data.
-
- Can we extend the Nicholson model to inform about signatures of
-  selection?
-
- Simulate the evolution using known evolution parameters, fit the
-  model, then look for signatures of selection in the alleles we know
-  were under selection.
+ \url{http://nicholsonppp.r-forge.r-project.org/}
 
 \section{Methods}
 
 \subsection{Evolution simulator}
+
+To simulate selection and genetic drift in several independent
+populations, we use a modified version of the simulator in
+\cite{Beaumont-Balding}. We assume $L$ independent loci, and $P$
+independent populations, evolving over $G$ generations.
+
+The allele frequency changes in each generation via
+2 mechanisms: drift and selection. Drift introduces some random
+variability up or down in allele frequency, independent of population
+color:
+$$\aijs = \operatorname{rbinom}(\neff,\alpha_{ij}(t-1))$$
+Selection depends on the color of the population, and the type of
+selection. For loci not under selection (none) and populations of
+neutral color, there is no allele frequency change due to selection
+(since presumably there is no selective pressure). For loci under
+positive selection, blue alleles will be favored in blue populations,
+and disfavored in red populations (and vice versa). For loci under
+balancing selection, it is advantageous to have both a blue and red
+allele in a population that is either blue or red.
 
  Single ancestral population.
 
@@ -101,7 +144,6 @@ $$
  starting subpopulation blue allele frequencies $\alpha_{i1}(0) = ... = \alpha_{iP}(0) = \pi_i $
  effective subpopulation size $\neff\in\{100,500,1000\}$
 
- genetic drift $\aijs = \operatorname{rbinom}(\neff,\alpha_{ij}(t-1))$
  genotype frequency vector based on Hardy-Weinberg equilibrium
 $$ A_{ij}(t) = 
 \left[
@@ -120,10 +162,10 @@ $$
 1 & 1 & 1 & \text{neutral}& 
 \end{array}
 $$
- allele frequency updated for selection:
+ allele frequency updated for selection based on Hardy-Weinberg equilibrium:
 $$\aij = \frac{
-\brat{ccc}{\wij{BB}&\wij{BR}/2&0} \cdot A_{ij}(t) }{
-\brat{ccc}{\wij{BB}&\wij{BR}&\wij{RR}} \cdot A_{ij}(t)
+\wij{BB}\aijs^2 + \wij{BR}\aijs[1-\aijs]/2 }{
+\wij{BB}\aijs^2 + \wij{BR}\aijs[1-\aijs] + \wij{RR}[1-\aijs]^2
    }$$
 
 
@@ -134,7 +176,17 @@ $$\aij = \frac{
  subpopulation allele frequency $\alpha_{ij}\sim N(\pi_i, c_j \pi_i(1-\pi_i))$
  ancestral allele frequency prior $\pi_i\sim \beta(a,a)$
  population divergence prior $c_j\sim U[0,1]$
- MCMC sampling: \includegraphics[width=0.2\textwidth]{nicholson-model}
+ MCMC sampling: 
+
+$$
+\xymatrix{
+  \pi_i \ar[rd] & & c_j \ar[ld] \\
+  & \alpha_{ij} \ar[d] & \\
+  & (X_{ij},N_{ij})
+}
+$$
+
+
  $\alpha^t = P(\alpha|c^{t-1},\pi^{t-1},x)$
  $\pi^t = P(\pi|c^{t-1},\alpha^t,a)$
  $c^t = P(c|\pi^t,\alpha^t)$
