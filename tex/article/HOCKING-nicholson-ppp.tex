@@ -296,6 +296,28 @@ Thus we can conclude that no harm is done by leaving in the ``fixed''
 loci, and we proceed with the rest of our analyses using all of the
 simulated loci.
 
+\subsection{Model estimates}
+
+\fig{anc-est-plot}{To diagnose dependence of model fit on selection
+  state, we plot ancestral allele frequency estimates for each loci
+  versus actual values from the simulation. Neutral loci are well
+  estimated by the model, but loci under balancing and positive
+  selection are not well estimated.}
+
+\fig{gen-pop}{foo}
+
+\fig{notbeta}{Scatter plot matrix for various values of
+  ancestral allele frequency $\pi$ for a simulated data set (actual
+  simulated values indicated by row/column simulated). Models using
+  priors that follow a $\beta(1,1)$ (indicated by fortranr1 and
+  winbugs1) and $\beta(0.7,0.7)$ (fortran.old, fortranr0.7, and
+  winbugs0.7) were fit using WinBUGS and our FORTRAN program. For
+  alleles under positive selection, there are small discrepancies
+  between the FORTRAN and WinBUGS programs.}
+
+\fig[0.5]{c-over-time-all}{foo} \fig[0.5]{c-over-time-diff}{foo}
+\fig[0.5]{c-over-time-same}{foo} \fig[0.8]{cutoff-plot-few}{foo}
+
 \subsection{Simulation summaries using animations}
 
 \fig{sim-summary-plot}{The simulation summary diagnostic plot. Note
@@ -318,55 +340,83 @@ website:
 
  \url{http://nicholsonppp.r-forge.r-project.org/}
 
-\subsection{Model estimates}
-
-\fig{anc-est-plot}{To diagnose dependence of model fit on selection
-  state, we plot ancestral allele frequency estimates for each loci
-  versus actual values from the simulation. Neutral loci are well
-  estimated by the model, but loci under balancing and positive
-  selection are not well estimated.}
-
-\fig{2009-08-27-notbeta}{Scatter plot matrix for various values of
-  ancestral allele frequency $\pi$ for a simulated data set (actual
-  simulated values indicated by row/column simulated). Models using
-  priors that follow a $\beta(1,1)$ (indicated by fortranr1 and
-  winbugs1) and $\beta(0.7,0.7)$ (fortran.old, fortranr0.7, and
-  winbugs0.7) were fit using WinBUGS and our FORTRAN program. For
-  alleles under positive selection, there are small discrepancies
-  between the FORTRAN and WinBUGS programs.}
-
-\fig[0.5]{c-over-time-all}{foo} \fig[0.5]{c-over-time-diff}{foo}
-\fig[0.5]{c-over-time-same}{foo} \fig[0.8]{cutoff-plot-few}{foo}
-
 \subsection{Prediction rates of the PPP-value classifier}
 
 To evaluate the sensitivity and specificity of the PPP-value
-classifier, we fit the model on 3 simulations with different parameter
-values:
+classifier, we fit the model on 3 sets of 5 simulations with different
+parameter values:
 
 \begin{tabular}{rrr}
-  Simulation & Populations & Loci \\
+  Set & Populations & Loci \\
   \hline
-  1 & 12 & 1000 \\
-  2 & 4 & 1000\\
-  3 & 12 & 19999
+  usual & 12 & 1000 \\ %  
+  few populations & 4 & 1000\\   % few
+  many neutral loci & 12 & 19999   % neu
 \end{tabular}
 
-For each of these, 
+For each of the above parameter sets, we fixed constant parameter
+values of population size 1000 and 100 generations of evolution. Then
+we did 5 different simulations with 100 loci each of
+$s_i\in\{0.001,0.01,0.032,0.1,1\}$.
 
-\fig[0.8]{dens-several-s-few}{foo} 
-\fig[0.8]{dens-several-s-neu}{foo}
+For each of these sets we first made density plots of PPP-value
+conditional on selection state for each $s_i$ value
+(\autoref{dens-several-s}, \autoref{dens-several-s-few},
+\autoref{dens-several-s-neu}).  Then we evaluated false positive and
+false negative rates for each possible decision rule; that is, each
+possible cutoff for the PPP-value (\autoref{cutoff-plot},
+\autoref{cutoff-plot-few}, \autoref{cutoff-plot-neu}).
 
-\fig[0.8]{cutoff-plot-neu}{foo}
-\fig[0.8]{cutoff-plot}{foo}
-\fig[0.8]{dens-several-s}{foo}
+\fig[0.8]{dens-several-s}{Density estimates for PPP-values of each
+  selection state, given data sets simulated with different selection
+  strengths $s_i$. Note how it gets easier to distinguish selection as
+  the selection strength parameter increases.}
+
+\fig[0.8]{dens-several-s-few}{Density estimates for PPP-values, for
+  only 4 populations. With fewer populations it is more difficult to
+  distinguish the behavior of loci under selection.}
+
+\fig[0.8]{dens-several-s-neu}{Density estimates for PPP-values, when
+  there is an abundance of neutral loci. In this case the densities
+  are clearly distinguishable, but the sheer number of neutral loci
+  makes a linear cutoff rule suboptimal.}
+
+\fig[0.8]{cutoff-plot}{Note the optimal cutoffs are near 0.35,
+  according to empirical risk minimzation.}
+
+\fig[0.8]{cutoff-plot-few}{Note that optimal cutoffs are near 0.4,
+  according to empirical risk minimization, but that only high
+  selection values $s_i$ are detected. Best values for incorrect
+  prediction are not as low as in the case where there are 12
+  populations.}
+
+\fig[0.8]{cutoff-plot-neu}{Note that with very many neutral alleles,
+  the rate of false positives ascends very quickly. In this situation,
+  the best cutoff value is around 0.2.}
+
+ROC curves were also traced, to compare all 15 simulations at the same
+time. ROC 
+
+\fig{roc-desc}{ROCs for several selection strengths, neutral allele
+  concentrations, and population numbers. As shown in the
+  densityplots, increasing selection strengths $s_i$ tend to increase
+  the area under the curve.}
+
+\fig[0.8]{roc-s}{ROCs for several selection strengths, neutral allele
+  concentrations, and population numbers. Note how the data sets with
+  4 populations generate decision rules which are noticeably less
+  powerful than those in the other 2 simulations.}
+
 \fig{gen-pop-dens}{foo}
-\fig{gen-pop}{foo}
 %\fig{gen-pop-roc}{foo}
-%\fig{roc-desc}{foo}
-%\fig[0.8]{roc-s}{foo}
 
-\section{Conclusions}
+\section{Conclusions and future work}
+
+More work needs to be done to characterize the expected number of
+false positives and false negatives in a real dataset.
+
+We should apply this model to a real dataset. It will be very easy
+since the interface to the model uses R.
 
 \bibliographystyle{plain}
 \bibliography{refs}
