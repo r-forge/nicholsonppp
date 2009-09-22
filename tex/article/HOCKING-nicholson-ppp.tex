@@ -304,7 +304,9 @@ simulated loci.
   estimated by the model, but loci under balancing and positive
   selection are not well estimated.}
 
-\fig{gen-pop}{foo}
+\fig{gen-pop}{Number of generations and populations in the simulation
+  affects model estimates ancestral allele frequency, agreeing with
+  model expectations.}
 
 \fig{notbeta}{Scatter plot matrix for various values of
   ancestral allele frequency $\pi$ for a simulated data set (actual
@@ -315,8 +317,13 @@ simulated loci.
   alleles under positive selection, there are small discrepancies
   between the FORTRAN and WinBUGS programs.}
 
-\fig[0.5]{c-over-time-all}{foo} \fig[0.5]{c-over-time-diff}{foo}
-\fig[0.5]{c-over-time-same}{foo} \fig[0.8]{cutoff-plot-few}{foo}
+\fig[0.5]{c-over-time-all}{Lineplots of differentiation parameter
+  estimates $c_j$ evolving over time. The model was fit for 4
+  generations (50,100,150,200). Note the linear behavior of the model
+  estimates, as expected. However, the slopes of the lines do not
+  always match the expected theoretical slopes, which can be
+  attributed to approximation errors.}
+
 
 \subsection{Simulation summaries using animations}
 
@@ -394,8 +401,7 @@ possible cutoff for the PPP-value (\autoref{cutoff-plot},
   the rate of false positives ascends very quickly. In this situation,
   the best cutoff value is around 0.2.}
 
-ROC curves were also traced, to compare all 15 simulations at the same
-time. ROC 
+ROCs were also traced, to compare all 15 simulations at the same time.
 
 \fig{roc-desc}{ROCs for several selection strengths, neutral allele
   concentrations, and population numbers. As shown in the
@@ -407,8 +413,16 @@ time. ROC
   4 populations generate decision rules which are noticeably less
   powerful than those in the other 2 simulations.}
 
-\fig{gen-pop-dens}{foo}
-%\fig{gen-pop-roc}{foo}
+Additionally, ROCs were traced for 9 simulations comprising a cross of
+3x3 parameter values: 25, 50, and 100 generations; 4, 8, 12
+populations (\autoref{gen-pop-roc}).
+
+\fig{gen-pop-roc}{ROCs show slight dependence of the PPP-value
+  classifier on number of populations and generations. It is more
+  difficult to accurately predict selection state for a smaller number
+  of generations and populations. However, 8 and 12 populations seems
+  to behave similarly, suggesting a threshhold for good behavior
+  between 4 and 8.}
 
 \section{Conclusions and future work}
 
