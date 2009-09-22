@@ -13,7 +13,7 @@
 
 \newcommand{\fig}[3][1]{
   \begin{figure}[htp]
-    \begin{center}
+    \begin{center}          %linewidth
     \includegraphics[width=#1\textwidth]{#2}
     \end{center}
     \caption{#3\label{#2}}
@@ -80,81 +80,62 @@ Furthermore, we validate the model using a simulation of evolution by
 genetic drift and selection. The simulator has been implemented using
 the R programming language\cite{R}. The model fitting has been
 implemented using compiled FORTRAN code dynamically linked to R. The
-analysis and graphics discussed in this article can be reproduced by
-using the code published in the R package \texttt{nicholsonppp} on
-R-Forge\cite{R-Forge}:
+simulations, analyses, and graphics discussed in this article can be
+reproduced by using the code published in the R package
+\texttt{nicholsonppp} on R-Forge\cite{R-Forge}:
 
  \url{http://nicholsonppp.r-forge.r-project.org/}
 
 \section{Methods}
 
-\subsection{Evolution simulator}
+\subsection{Simulating genetic drift and selection}
 
 To simulate selection and genetic drift in several independent
 populations, we use a modified version of the simulator in
 \cite{Beaumont-Balding}. We assume $L$ independent loci, and $P$
-independent populations, evolving over $G$ generations.
+independent populations, evolving over $T$ generations. To model SNP
+data, each locus has only 2 possible alleles, thus we denote the
+allele frequency for locus $i$ in population $j$ at generation $t$ as
+$\aij$, with $0\leq \aij\leq 1$. To assign ancestral allele
+frequencies $\pi_i=\alpha_{1,j}(1)=...=\alpha_{L,j}(1)$, we draw from a truncated
+$\beta(0.7,0.7)$ distribution \autoref{beta}.
+
+\fig[0.5]{beta}{Distribution of ancestral allele frequencies in our
+  simulations follow a truncated $\beta(0.7,0.7)$ distribution.}
+
+If we assign the colors blue and red to the 2 alleles, and we define
+$\aij$ is the blue allele frequency, then $1-\aij$ is the red allele
+frequency. The color of the allele will determine its fate under
+selection in populations which each have a background color of either
+red or blue. Population color is chosen at random, independently for
+each locus, at the beginning of the simulation, with probability 0.4
+for each of red or blue, and 0.2 for neutral populations where neither
+allele is favored. The idea is to simulate the fact that some alleles
+are favored in some environments, while disfavored in others. Thus,
+under positive selection, red alleles will be favored in red
+populations, and disfavored in blue populations (vice versa for blue
+alleles). Under balancing selection, it is advantageous to have both a
+blue and red allele. This simulates the heterozygote advantage, a
+phenomenon classically observed in the gene that controls malaria
+resistence and sickle-cell anemia affectation.
 
 The allele frequency changes in each generation via
 2 mechanisms: drift and selection. Drift introduces some random
 variability up or down in allele frequency, independent of population
 color:
 $$\aijs = \operatorname{rbinom}(\neff,\alpha_{ij}(t-1))$$
-Selection depends on the color of the population, and the type of
-selection. For loci not under selection (none) and populations of
-neutral color, there is no allele frequency change due to selection
-(since presumably there is no selective pressure). For loci under
-positive selection, blue alleles will be favored in blue populations,
-and disfavored in red populations (and vice versa). For loci under
-balancing selection, it is advantageous to have both a blue and red
-allele in a population that is either blue or red.
+The effect of drift grows more important relative to selection as
+population size $\neff$ diminishes.
 
- Single ancestral population.
-
- Several subpopulations:
-   Initially with the same allele frequency but evolving
-    independently.
-   Each has a different background color (blue, red, neutral).
-
- Several independent loci:
-   Two alleles (red, blue) to mimic the SNP data.
-   Each has a different selection coefficient $s\in \RR^+$, but
-    normally in reality $s<1$.
-   Each has a different selection type (neutral, positive, or balancing).
-
- Evolution by drift and selection over several generations.
-
-
- loci $i \in \{1, ...,  L\}$
-
- 15 distinct selection parameters 
-$$
-\begin{array}{lll}
-s_i\in \{ & 0.0025,0.0050,0.0075,0.0100,0.0200,\\
-          & 0.0300,0.0400,0.0500,0.0750,0.1000,\\
-          & 0.5000,0.7500,1.0000,1.5000,2.0000 & \}
-\end{array}
-$$
- 50 replications of each $s$ value, for positive and balancing selection
- proportion of neutral loci $\text{p.neutral}\in\{1/3,0.9\}
-  \Rightarrow$ 750 or 13500 replications
- populations $j\in\{1, ..., P\}$, $P\in \{2,4,8\}$
- ancestral blue allele frequencies $\pi_1, ..., \pi_L\sim
-  \operatorname{rbeta}(0.7,0.7)$
- starting subpopulation blue allele frequencies $\alpha_{i1}(0) = ... = \alpha_{iP}(0) = \pi_i $
- effective subpopulation size $\neff\in\{100,500,1000\}$
-
- genotype frequency vector based on Hardy-Weinberg equilibrium
-$$ A_{ij}(t) = 
-\left[
-\begin{array}{ccc}
-\aijs^2 & 2\aijs(1-\aijs) & (1-\aijs)^2
-\end{array}
-\right]^T$$
- relative fitness of genotypes 
+Then to update the allele frequency for selection, we first calculate
+relative fitness of each diploid genotype. Relative fitness of a locus
+is based on the selection coefficient for that locus $s_i\in \RR$,
+which is a parameter of the simulation, usually between 0 and 1 in
+empirical studies. Selection for a locus grows more important relative
+to genetic drift as $s_i$ increases.
 $$
 \begin{array}{cccll}
-\wij{BB} & \wij{BR} & \wij{RR} & i & j\\
+\wij{BB} & \wij{BR} & \wij{RR} & \text{selection type} & \text{population color}\\
 \hline
 1 & 1+s_i/2 & 1+s_i & \text{positive}& \text{red}\\
 1+s_i & 1+s_i/2 & 1 & \text{positive}& \text{blue}\\
@@ -162,21 +143,36 @@ $$
 1 & 1 & 1 & \text{neutral}& 
 \end{array}
 $$
- allele frequency updated for selection based on Hardy-Weinberg equilibrium:
+Then we update blue allele frequency for selection based on
+Hardy-Weinberg equilibrium:
 $$\aij = \frac{
 \wij{BB}\aijs^2 + \wij{BR}\aijs[1-\aijs]/2 }{
 \wij{BB}\aijs^2 + \wij{BR}\aijs[1-\aijs] + \wij{RR}[1-\aijs]^2
    }$$
 
+   We repeat the process for $t=2, ..., T$, and we take values
+   $\alpha_{ij}(T)$ as the output allele frequencies of the
+   simulation.
 
 
-\subsection{Model summary}
-{The hierarchical bayesian Nicholson model}{
- number of alleles $x_{ij}\sim \Bin(\neff,\alpha_{ij})$
- subpopulation allele frequency $\alpha_{ij}\sim N(\pi_i, c_j \pi_i(1-\pi_i))$
- ancestral allele frequency prior $\pi_i\sim \beta(a,a)$
- population divergence prior $c_j\sim U[0,1]$
- MCMC sampling: 
+
+\subsection{The hierarchical bayesian Nicholson model}
+
+To model the variation between observed allele frequencies in
+different populations, the Nicholson model assigns a divergence
+parameter $c_j$ to each population. The number of observed alleles is
+modeled as $x_{ij}\sim \Bin(\neff,\alpha_{ij})$, where $\alpha_{ij}$
+is the population allele frequency for locus $i$ and population
+$j$. This quantity is in turned modeled by $\alpha_{ij}\sim N(\pi_i,
+c_j \pi_i(1-\pi_i))$, a normal distribution truncated to the interval
+[0,1]. The differentiation parameter $c_j$ is motivated by population
+genetics (see section 2.2, \cite{nicholson}). The distributions of the
+hyperparameter for ancestral allele frequency follows $\pi_i\sim
+\beta(a,a)$ and the population divergence parameter follows $c_j\sim
+U[0,1]$.
+
+The relationship between model parameters is more clearly summarised
+in the following diagram:
 
 $$
 \xymatrix{
@@ -186,16 +182,35 @@ $$
 }
 $$
 
-
- $\alpha^t = P(\alpha|c^{t-1},\pi^{t-1},x)$
- $\pi^t = P(\pi|c^{t-1},\alpha^t,a)$
- $c^t = P(c|\pi^t,\alpha^t)$
- Implemented using a Gibbs sampler in a FORTRAN program.
- Run on each simulation, and each subset of loci (all,
-  not.all.fixed, none.fixed), independently.
-}
+MCMC techniques are used to sample from the following posterior distributions:
+$$\alpha^t = P(\alpha|c^{t-1},\pi^{t-1},x)$$
+$$\pi^t = P(\pi|c^{t-1},\alpha^t,a)$$
+$$c^t = P(c|\pi^t,\alpha^t)$$
 
 \subsection{PPP-value calculation}
+
+Calculation of PPP-values in the Markov Chain is used for the
+classifier. For each iteration $t$ through the chain, we say the data fits
+the model if the following criterion is met:
+
+$$
+p_i^t =
+\begin{cases}
+1 & \text{if }\left(
+\frac{\operatorname{rbinom}(N_{ij},\alpha_{ij}^t)}{N_{ij}} - \pi_i^t
+\right)^2
+>
+\left(
+\frac{Y_{ij}}{N_{ij}} - \pi_i^t
+\right)^2\\
+0 & \text{otherwise}
+$$
+
+Thus the PPP-value for locus $i$ is given by
+
+$$
+p_i = \frac 1 T \sum_{t=1}^T p_i^t
+$$
 
 \section{Results}
 
@@ -216,9 +231,6 @@ Loci fixation?
 
 
 \subsection{Simulation verification}
-
-\fig[0.5]{beta}{Distribution of ancestral allele frequencies in our
-  simulations follow a truncated $\beta(0.7,0.7)$ distribution.}
 
 \fig{loci-over-time}{Allele frequency evolution of 6 loci in 12
   populations over 100 generations.}
