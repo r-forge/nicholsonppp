@@ -4,17 +4,19 @@
 \usepackage[all]{xy}
 \usepackage{amsmath,amssymb}
 
-\title{Identifying loci under selective pressure using a PPP-value classifier}
-\author{Toby Dylan Hocking}
+\title{Identifying genetic loci under selective pressure using a
+  posterior predictive p-value classifier} \author{Toby Dylan Hocking}
 
 \begin{document}
 
 \maketitle
+\tableofcontents
+\listoffigures
 
 \newcommand{\fig}[3][1]{
   \begin{figure}[htp]
     \begin{center}          %linewidth
-    \includegraphics[width=#1\textwidth]{#2}
+    \includegraphics[width=#1\linewidth]{#2}
     \end{center}
     \caption{#3\label{#2}}
   \end{figure}
@@ -27,7 +29,6 @@
     \end{array}
     \right]
 }
-\newcommand{\neff}{\text{popsize}}
 \newcommand{\aij}{\alpha_{ij}(t)}
 \newcommand{\aijs}{\alpha_{ij}^*(t)}
 \newcommand{\wij}[1]{w_{ij}^{\text{#1}}}
@@ -37,15 +38,20 @@
 
 \section{Introduction}
 
-The explosion of molecular marker data in animal populations from
-technologies such as Single Nucleotide Polymorphism (SNP) microarrays
+The recent explosion of molecular marker data in animal populations
+from technologies such as Single Nucleotide Polymorphism (SNP) assays
 opens new avenues of research for population genetics. These data
 allow testing of many aspects of our current models of population
 genetics, such as the evolutionary status of these markers relative to
-selective pressures. One area we are interested in is the estimation
-of genetic differentiation between populations, and establishing
-methods for determining which markers and genomic regions have been
-under selective pressure. Genomic areas under selection are areas with
+selective pressures. These data are usually investigated by either
+examining summary statistics and empirical distributions, or by using
+model-based approaches. We are more concerned with model-based
+approaches, with emphasis on detecting departures from the model.
+
+In this study, we are interested in is the estimation of genetic
+differentiation between populations, and establishing methods for
+determining which markers and genomic regions have been under
+selective pressure. Genomic areas under selection are areas with
 probable functional significance, thus the goal is to develop methods
 we can use to identify functional genes and augment the current state
 of functional annotations for domestic animal genomes.
@@ -53,35 +59,42 @@ of functional annotations for domestic animal genomes.
 In the last several decades, the statistical tools of biologists and
 geneticists have evolved considerably. In particular, modern computers
 and stochastic methods such as Markov Chain Monte Carlo (MCMC) allow
-for complex Bayesian models of evolutionary systems. In this work, we
-investigate one such Bayesian model used to describe evolution of
-domestic animation populations, and extend it with a classifier for
-markers under selection.
+for estimation of the posterior distribution of parameters of Bayesian
+models of evolutionary systems. In this work, we investigate one such
+Bayesian model used to describe evolution of domestic animal
+populations, and extend it with a classifier for markers under
+selection.
 
 The model of domestic animal evolution that we consider in this work
-is the hierarchical Bayesian model of Nicholson \etal
-(2002)\cite{nicholson}, hereafter referred to as the Nicholson
-model. This model attempts to estimate ancestral population allele
-frequencies for each marker, and a measure of divergence for each
-population which is analogous to the classical $F_{st}$ of population
-genetics.
+is the hierarchical Bayesian model of Nicholson \etal\
+\cite{nicholson}, hereafter referred to as the Nicholson model. This
+model assumes that a single population gives rise to several
+subpopulations, which branch off at the same time, and begin
+independently evolving. The Nicholson model assumes all loci are
+affected only by genetic drift (not selection), and attempts to
+measure population differentiation in a manner which is analogous to
+the classical $F_{ST}$ of population genetics. In the process the
+model also yields estimates of ancestral allele frequency.
 
 The new idea put forth in this work is a classifier for markers under
-selection, based on Posterior Predictive P-values
-(PPP-values)\cite{pppvalues}. Essentially these PPP-values are the
-Bayesian analogue of the usual frequentist P-values, which indicate
-departures from the model hypotheses. The Nicholson model was designed
-for, and accurately models, independently evolution populations under
-genetic drift. However, loci under selection in addition to genetic
-drift represent departures from the model hypotheses. Thus we use
-PPP-values estimates from the model to identify these aberrent loci.
+selection, based on loci which do not fit well into the pure-drift
+Nicholson model. To quantify the probability that a locus fits the
+pure-drift model, we use Posterior Predictive P-values, or PPP-values
+\cite{pppvalues}. Essentially these PPP-values are the Bayesian
+analogue of the usual frequentist P-values, which indicate departures
+from the model hypotheses. The Nicholson model was designed for, and
+accurately models, independently evolving populations under genetic
+drift. However, loci under selection in addition to genetic drift
+represent departures from the model hypotheses. Thus we use PPP-values
+estimates from the model to identify these aberrent loci.
 
-Furthermore, we validate the model using a simulation of evolution by
-genetic drift and selection. The simulator has been implemented using
-the R programming language\cite{R}. The model fitting has been
-implemented using compiled FORTRAN code dynamically linked to R. The
-simulations, analyses, and graphics discussed in this article can be
-reproduced by using the code published in the R package
+Furthermore, to test the robustness of our classifier under different
+evolutionary conditions, we test it using extensive simulation of
+evolution by genetic drift and selection. The simulator has been
+implemented using the R programming language\cite{R}. The model
+fitting has been implemented using compiled FORTRAN code dynamically
+linked to R. The simulations, analyses, and graphics discussed in this
+article can be reproduced by using the code published in the R package
 \texttt{nicholsonppp} on R-Forge\cite{R-Forge}:
 
  \url{http://nicholsonppp.r-forge.r-project.org/}
@@ -93,39 +106,59 @@ reproduced by using the code published in the R package
 To simulate selection and genetic drift in several independent
 populations, we use a modified version of the simulator in
 \cite{Beaumont-Balding}. We assume $L$ independent loci, and $P$
-independent populations, evolving over $T$ generations. To model SNP
-data, each locus has only 2 possible alleles, thus we denote the
-allele frequency for locus $i$ in population $j$ at generation $t$ as
-$\aij$, with $0\leq \aij\leq 1$. To assign ancestral allele
-frequencies $\pi_i=\alpha_{1,j}(1)=...=\alpha_{L,j}(1)$, we draw from a truncated
-$\beta(0.7,0.7)$ distribution \autoref{beta}.
+independent populations, evolving over $T$ generations.
 
-\fig[0.5]{beta}{Distribution of ancestral allele frequencies in our
+To model SNP data, each locus has only 2 possible alleles, thus we
+denote the allele frequency for locus $i$ in population $j$ at
+generation $t$ as $\aij$, with $0\leq \aij\leq 1$. To assign ancestral
+allele frequencies $\pi_i=\alpha_{i,1}(1)=...=\alpha_{i,P}(1)$, we
+draw from a truncated $\beta(0.7,0.7)$ distribution
+(\autoref{beta}). That is, for all $i$,
+$$P(\pi_i<0.05)=P(\pi_i>0.95)=0$$
+and if $Z\sim\beta(0.7,0.7)$,
+$$P(\pi_i=0.05)=P(\pi_i=0.95)=P(Z<0.05)$$
+
+We chose to truncate the distribution of initial allele frequencies so
+as to reduce the number of loci which are ``fixed'' with allele
+frequency 0 or 1 at the end of the simulation.
+
+This choice is motivated by population genetics, which gives us the
+result that at equilibrium, under mutation and genetic drift, the
+distribution of allele frequencies approximately follow a
+$\beta(4N\mu,4N\mu)$ distribution, where $N$ is the effective
+population size and $\mu$ is the mutation rate (\autoref{Wright}). We
+also considered using a truncated $\beta(1,1)$ distribution, which is
+the same as the $U[0,1]$ distribution, but no noticeable difference
+was observed.
+
+\fig[0.75]{beta}{Distribution of ancestral allele frequencies in our
   simulations follow a truncated $\beta(0.7,0.7)$ distribution.}
 
 If we assign the colors blue and red to the 2 alleles, and we define
-$\aij$ is the blue allele frequency, then $1-\aij$ is the red allele
-frequency. The color of the allele will determine its fate under
-selection in populations which each have a background color of either
-red or blue. Population color is chosen at random, independently for
-each locus, at the beginning of the simulation, with probability 0.4
-for each of red or blue, and 0.2 for neutral populations where neither
-allele is favored. The idea is to simulate the fact that some alleles
-are favored in some environments, while disfavored in others. Thus,
-under positive selection, red alleles will be favored in red
-populations, and disfavored in blue populations (vice versa for blue
-alleles). Under balancing selection, it is advantageous to have both a
-blue and red allele. This simulates the heterozygote advantage, a
-phenomenon classically observed in the gene that controls malaria
-resistence and sickle-cell anemia affectation.
+$\aij$ as the blue allele frequency for locus $i$ in population $j$ at
+generation $t$, then $1-\aij$ is the red allele frequency. The color
+of the allele will determine its fate under selection in populations
+which each have a background color of either red or blue. Population
+color is chosen at random, independently for each locus, at the
+beginning of the simulation, with probability 0.4 for each of red or
+blue, and 0.2 for neutral populations where neither allele is favored.
+
+The idea is to simulate the fact that some alleles are favored in some
+environments, while disfavored in others. Thus, under positive
+selection, red alleles will be favored in red populations, and
+disfavored in blue populations (vice versa for blue alleles). Under
+balancing selection, it is advantageous to have both a blue and red
+allele. This simulates the heterozygote advantage, a phenomenon
+classically observed in the gene that controls malaria resistence and
+sickle-cell anemia affectation.
 
 The allele frequency changes in each generation via
 2 mechanisms: drift and selection. Drift introduces some random
 variability up or down in allele frequency, independent of population
 color:
-$$\aijs = \operatorname{rbinom}(\neff,\alpha_{ij}(t-1))$$
+$$\aijs \sim \operatorname{Bin}(N_{ij},\alpha_{ij}(t-1))$$
 The effect of drift grows more important relative to selection as
-population size $\neff$ diminishes.
+population size $N_{ij}$ diminishes.
 
 Then to update the allele frequency for selection, we first calculate
 relative fitness of each diploid genotype. Relative fitness of a locus
@@ -143,8 +176,11 @@ $$
 1 & 1 & 1 & \text{neutral}& 
 \end{array}
 $$
+
 Then we update blue allele frequency for selection based on
-Hardy-Weinberg equilibrium:
+Hardy-Weinberg equilibrium, which allows us to derive expressions for
+genotype frequencies in terms of allele frequency:
+
 $$\aij = \frac{
 \wij{BB}\aijs^2 + \wij{BR}\aijs[1-\aijs]/2 }{
 \wij{BB}\aijs^2 + \wij{BR}\aijs[1-\aijs] + \wij{RR}[1-\aijs]^2
@@ -160,44 +196,117 @@ $$\aij = \frac{
 
 To model the variation between observed allele frequencies in
 different populations, the Nicholson model assigns a divergence
-parameter $c_j$ to each population. The number of observed alleles is
-modeled as $x_{ij}\sim \Bin(\neff,\alpha_{ij})$, where $\alpha_{ij}$
-is the population allele frequency for locus $i$ and population
-$j$. This quantity is in turned modeled by $\alpha_{ij}\sim N(\pi_i,
-c_j \pi_i(1-\pi_i))$, a normal distribution truncated to the interval
-[0,1]. The differentiation parameter $c_j$ is motivated by population
-genetics \cite[section 2.2]{nicholson}. The distributions of the
-hyperparameter for ancestral allele frequency follows $\pi_i\sim
-\beta(a,a)$ and the population divergence parameter follows $c_j\sim
-U[0,1]$.
+parameter $c_j$ to each population. The number of observed (blue)
+alleles for locus $i$ in population $j$ is modeled as
+$$x_{ij}\sim \Bin(N_{ij},\alpha_{ij})$$
+where $\alpha_{ij}$ is the population allele frequency, and $N_{ij}$
+is the total number of alleles (red or blue).
+
+This quantity is in turned modeled by
+$$\alpha_{ij}\sim N(\pi_i, c_j\pi_i(1-\pi_i))$$
+a normal distribution truncated to the interval [0,1]. The
+differentiation parameter $c_j$ is motivated by population genetics
+\cite[section 2.2]{nicholson}.
+
+The distribution of the hyperparameter for ancestral allele frequency
+follows the prior distribution
+$$\pi_i\sim \beta(a,a)$$
+Values $a\in\{0.7,1\}$ were used, and showed similar results.
+
+The population divergence hyperparameter follows the prior
+distribution $$c_j\sim U[0,1]$$
 
 The relationship between model parameters is more clearly summarised
-in the following diagram:
+in the following directed acyclic graph:
 
 $$
 \xymatrix{
   \pi_i \ar[rd] & & c_j \ar[ld] \\
   & \alpha_{ij} \ar[d] & \\
-  & (X_{ij},N_{ij})
+  & (x_{ij},N_{ij})
 }
 $$
 
-MCMC techniques are used to sample from the following posterior distributions:
+The point of Bayesian statistics is to exploit Bayes' Rule to obtain
+posterior distributions of the model parameters conditional on the
+data. Generally, if use $x$ to signify the observed data and $\theta$
+to denote the model parameters, we can write the posterior
+distribution as
+\begin{equation}
+\label{bayes}
+P(\theta|x) = \frac{P(x,\theta)}{P(x)} = 
+\frac{P(x,\theta)}{\int P(x,\theta)d\theta} =
+\frac{f(x|\theta)g(\theta)}{\int f(x|\theta)g(\theta)d\theta}
+\end{equation}
+where $f$ is the density of the data $x$ and $g$ is the density of the
+model parameters $\theta$.
+
+Since it is often difficult to evaluate the integral in the
+denominator of equation \ref{bayes}, we instead turn to Markov Chain
+Monte Carlo techniques to sample from the posterior
+distribution. Essentially, we use a Metropolis-Hastings algorithm to
+draw samples from a Markov chain, thus giving us an approximation of
+the posterior distribution \cite{hastings}.
+
+Thus, for each step in the chain $t$, we sample from the following
+posterior distributions:
 $$\alpha^t = P(\alpha|c^{t-1},\pi^{t-1},x)$$
 $$\pi^t = P(\pi|c^{t-1},\alpha^t,a)$$
 $$c^t = P(c|\pi^t,\alpha^t)$$
 
-\subsection{PPP-value calculation}
+The model was first implemented using WinBUGS \cite{winbugs}. To
+provide speed optimizations for the model fitting, a faster
+model-fitting program was written in FORTRAN.
 
-Calculation of PPP-values in the Markov Chain is used for the
-classifier. For each iteration $t$ through the chain, we say the data fits
-the model if the following criterion is met:
+The posterior distribution for each model parameter was sampled 1000
+times using MCMC, giving us an approximate posterior
+distribution. However, to simplify the analyses, each distribution was
+summarized using the mean. Thus when we refer to model parameter
+estimates, we mean the sample mean of the values drawn from the
+posterior distribution.
+
+\subsection{PPP-value calculation theory}
+
+The PPP-value for locus $i$ is defined as
+
+$$\text{PPP}_i = 
+P\left[T_i(y_{ij}^{\text{rep}},\theta)\geq T_i(y_{ij}^{\text{obs}},\theta)|y^{\text{obs}}\right]
+$$
+where $y_{ij}=x_{ij}/N_{ij}$ is the allele frequency for locus $i$ and
+population $j$, $\theta$ is a vector of parameters, and $T_i$ is a
+discrepancy criterion applied to replicated (rep) and observed (obs)
+data sets.
+
+We need to choose a discrepancy criterion which depends on both data
+and parameters. Here, we use a $\chi^2$-type criterion:
+$$T_i = \sum_{j=1}^P T_{ij}$$
+with
+$$T_{ij} = 
+\frac{\left[y_{ij} - E(y_{ij}|\theta_{ij})\right]^2}{
+  \operatorname{Var}(y_{ij}|\theta_{ij})}$$ where
+$\theta_{ij}=(\pi_i,c_j,\sigma_{ij}^2$ is a vector of parameters and $\sigma^2$ is $N_{ij}$ times the sampling variance of the observed allele frequency given its true value $p_{ij}$ so that
+$\sigma^2=p_{ij}(1-p_{ij})$
+
+We define the indicator variable
+$$
+I_i =
+\begin{cases}
+  1 & \text{if }T_i(y_{ij}^{\text{rep}},\theta)\geq T_i(y_{ij}^{\text{obs}},\theta) \\
+  0 & \text{otherwise}
+\end{cases}
+$$
+
+\subsection{PPP-value calculation implementation}
+
+Calculation of PPP-values must be made in the context of sampling from
+a stationary Markov chain. For each iteration $t$ through the chain,
+we define this indicator value:
 
 $$
-p_i^t =
-\begin{cases}
+p_{ij}^t =
+\begin{cases} 
 1 & \text{if }\left(
-\frac{\operatorname{rbinom}(N_{ij},\alpha_{ij}^t)}{N_{ij}} - \pi_i^t
+\frac{\operatorname{Bin}(N_{ij},\alpha_{ij}^t)}{N_{ij}} - \pi_i^t
 \right)^2
 >
 \left(
@@ -206,11 +315,13 @@ p_i^t =
 0 & \text{otherwise}
 \end{cases}
 $$
+where $\operatorname{Bin}(\dot,\dot)$ represents a randomly generated
+number from the binomial distribution.
 
 Thus the PPP-value for locus $i$ is given by
 
 $$
-p_i = \frac 1 T \sum_{t=1}^T p_i^t
+\text{PPP}_i = \frac 1 {PT} \sum_{j=1}^P \sum_{t=1}^T p_{ij}^t
 $$
 
 \section{Results}
@@ -223,9 +334,19 @@ evolving according to the theoretical evolution framework we had
 envisioned. R packages lattice and ggplot2 are used to visualize these
 multivariate data \cite{lattice,ggplot2}.
 
-First, we checked how allele frequencies evolve over time for just a
-few loci (\autoref{loci-over-time}). The loci examined show no signs
-of departure from the hypotheses of our evolution simulator.
+From population genetics, the expectation and variance of allele
+frequency in a population under only genetic drift is given by:
+$$E(\aij)=\pi_i$$
+$$\operatorname{Var}(\aij)=\pi(1-\pi)\left[1-\left(1-\frac{1}{2N}\right)^{t-1}\right]$$
+Thus we expect a good simulator of genetic drift to be unbiased for
+the starting ancestral allele frequency, and to have variance
+increasing with each generation of evolution $t$.
+
+We visually checked how allele frequencies evolve over time by
+examining lineplots of allele frequency over time
+(\autoref{loci-over-time}). This plot shows 2 loci under positive
+selection, 2 loci under balancing selection, and 2 loci not under
+selection.
 
 \fig{loci-over-time}{Allele frequency evolution of 6 loci in 12
   populations over 100 generations. Each panel represents a different
@@ -233,10 +354,22 @@ of departure from the hypotheses of our evolution simulator.
   population. Shown are two loci for balancing selection (left), no
   selection (middle), and positive selection (right).}
 
-However, to verify that all loci behave according to expectations, we
-used dotplots of final allele frequency
-(\autoref{fixation-endpoints}). These dotplots efficiently show that
-the loci evolved according to the simulator hypotheses.
+For the loci not under selection, the values of allele frequency rest
+near the starting allele frequency, and the variance increases over
+time. Thus, the loci not under selection exhibit the expected
+characteristics and we can conclude the simulator works well for these
+loci.
+
+Similarly, for loci under selection, these plots reveal no signs of
+departure from the hypotheses of our evolution simulator. That is,
+high blue allele frequency is clearly favored for blue populations
+under positive selection. For balancing selection, colored populations
+evolve toward an allele frequency of 50\%, accurately simulating
+selection of the heterozygote.
+
+This plot was useful for looking at a few loci. However, to verify
+that all loci behave according to expectations, we used dotplots of
+final allele frequency (\autoref{fixation-endpoints}).
 
 \fig{fixation-endpoints}{Final simulated blue allele frequency for
   1000 loci and 12 populations is shown in a dotplot. Loci are ordered
@@ -247,15 +380,102 @@ the loci evolved according to the simulator hypotheses.
   behave similarly, regardless of population color. Also, the symmetry
   between blue and red alleles is clearly visible.}
 
+This dotplot clearly shows that all loci under selection display no
+signs of selective pressure when in neutral color
+populations. Inversely, all loci which are not under selection behave
+similarly, regardless of population color. Also, the symmetry between
+blue and red alleles is clearly visible. This dotplots efficiently
+shows that the allele frequencies evolved according to the simulator
+hypotheses.
+
+\subsection{Model estimates}
+
+We are simulating loci under selection, and analyzed them using the
+pure-drift Nicholson model. Thus we expect that the loci under
+selection will not fit the model well.
+
+To diagnose dependence of model fit on selection state, we plot
+ancestral allele frequency estimates for each loci versus actual
+values from the simulation (\autoref{anc-est-plot}).
+
+\fig{anc-est-plot}{Grouped scatterplots illustrate that model
+  estimates of ancestral allele frequency are not robust to
+  selection.}
+
+This scatterplot clearly shows that neutral loci are well estimated by
+the model, but loci under balancing and positive selection are not
+well estimated. This result is sensible in view of the fact that the
+Nicholson model was designed with only genetic drift in mind. Thus it
+is expected that model parameters for loci under selection are not
+estimated well.
+
+To examine the robustness of these ancestral allele frequency
+estimates to changes in number of populations and number of
+generations, we did exhaustive simulations of several parameter
+values. We did 9 simulations, fitting the model for each of them, with
+25, 50, or 100 generations, and 4, 8, or 12 populations.
+
+To display the results of the ancestral allele frequency estimates, we
+used trellised scatterplots of estimates versus actual values
+(\autoref{gen-pop}).
+
+\fig{gen-pop}{Number of generations and populations in the simulation
+  affects model estimates of ancestral allele frequency, agreeing with
+  model expectations.}
+
+From what we know about genetic drift, we expect that augmenting the
+number of generations will increase the variance of the allele
+frequencies, and thus increase the variance of the ancestral allele
+frequency estimate. Similarly, we expect that increasing the number of
+populations will give us more information about the ancestral allele
+frequency, leading to more accurate estimates.
+
+This series of scatterplots clearly shows that the estimates behave as
+expected. Less accurate estimates are clearly seen with more
+generations and fewer populations.
+
+To evaluate if the model estimates of our FORTRAN program agree with
+model estimates given by WinBUGS, we used both programs to fit the
+model to a single simulation. Furthermore, Nicholson \etal\ note that
+the model estimates are robust to changes in the prior distribution of
+the $\pi_i$. We fit the Nicholson model to a single data set using
+prior distributions of $\beta(0.7,0.7)$ and $\beta(1,1)=U[0,1]$.
+
+The results of all these model fits are summarized in a scatter plot
+matrix of ancestral allele frequency estimate versus actual value
+(\autoref{notbeta}).
+
+\fig{notbeta}{Scatter plot matrix for various values of
+  ancestral allele frequency $\pi$ for a simulated data set (actual
+  simulated values indicated by row/column simulated). Models using
+  priors that follow a $\beta(1,1)$ (indicated by fortranr1 and
+  winbugs1) and $\beta(0.7,0.7)$ (fortran.old, fortranr0.7, and
+  winbugs0.7) were fit using WinBUGS and our FORTRAN program. For
+  alleles under positive selection, there are small discrepancies
+  between the FORTRAN and WinBUGS programs.}
+
+The scatter plot matrix clearly shows that there are no significant
+differences between models that use the same program. That is, the
+choice of prior distribution of the ancestral allele frequencies has
+little influence on model estimates.
+
+\fig[0.5]{c-over-time-all}{Lineplots of differentiation parameter
+  estimates $c_j$ evolving over time. The model was fit for 4
+  generations (50,100,150,200). Note the linear behavior of the model
+  estimates, as expected. However, the slopes of the lines do not
+  always match the expected theoretical slopes, which can be
+  attributed to approximation errors. }
+
+
 \subsection{Characterization of loci fixation on model fit}
 
-The dotplots above also clearly show that the loci under selection
-tend to get fixed at frequencies of 0 or 1 by the end of the
-simulation. These data seem to violate the initial hypothesis that we
-are dealing with SNP data. That is, data from SNP microarrays is
-necessarily biased to favor loci which we have already observed are
-polymorphic. This phenomenon is called the ``recruitment bias'' in the
-literature.
+The simulation diagnostic dotplots also clearly show that the loci
+under selection tend to get fixed at frequencies of 0 or 1 by the end
+of the simulation (\autoref{fixation-endpoints}). These data seem to
+violate the initial hypothesis that we are dealing with SNP data. That
+is, data from SNP microarrays is necessarily biased to favor loci
+which we have already observed are polymorphic. This phenomenon is
+called the ``recruitment bias'' in the literature.
 
 To characterize if the model estimates are sensitive to the
 recruitment bias, we fit several models using non-fixed subsets of the
@@ -295,35 +515,6 @@ similar, regardless of the number of loci included in the dataset.
 Thus we can conclude that no harm is done by leaving in the ``fixed''
 loci, and we proceed with the rest of our analyses using all of the
 simulated loci.
-
-\subsection{Model estimates}
-
-\fig{anc-est-plot}{To diagnose dependence of model fit on selection
-  state, we plot ancestral allele frequency estimates for each loci
-  versus actual values from the simulation. Neutral loci are well
-  estimated by the model, but loci under balancing and positive
-  selection are not well estimated.}
-
-\fig{gen-pop}{Number of generations and populations in the simulation
-  affects model estimates ancestral allele frequency, agreeing with
-  model expectations.}
-
-\fig{notbeta}{Scatter plot matrix for various values of
-  ancestral allele frequency $\pi$ for a simulated data set (actual
-  simulated values indicated by row/column simulated). Models using
-  priors that follow a $\beta(1,1)$ (indicated by fortranr1 and
-  winbugs1) and $\beta(0.7,0.7)$ (fortran.old, fortranr0.7, and
-  winbugs0.7) were fit using WinBUGS and our FORTRAN program. For
-  alleles under positive selection, there are small discrepancies
-  between the FORTRAN and WinBUGS programs.}
-
-\fig[0.5]{c-over-time-all}{Lineplots of differentiation parameter
-  estimates $c_j$ evolving over time. The model was fit for 4
-  generations (50,100,150,200). Note the linear behavior of the model
-  estimates, as expected. However, the slopes of the lines do not
-  always match the expected theoretical slopes, which can be
-  attributed to approximation errors. }
-
 
 \subsection{Simulation summaries using animations}
 
