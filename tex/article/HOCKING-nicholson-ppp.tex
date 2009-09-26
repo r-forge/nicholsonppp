@@ -88,7 +88,7 @@ from the model hypotheses. The Nicholson model was designed for, and
 accurately models, independently evolving populations under genetic
 drift. However, loci under selection in addition to genetic drift
 represent departures from the model hypotheses. Thus we use PPP-values
-estimates from the model to identify these aberrent loci.
+estimated from the model to identify these aberrent loci.
 
 Furthermore, to test the robustness of our classifier under different
 evolutionary conditions, we test it using extensive simulation of
@@ -200,9 +200,9 @@ To model the variation between observed allele frequencies in
 different populations, the Nicholson model assigns a divergence
 parameter $c_j$ to each population. The number of observed (blue)
 alleles for locus $i$ in population $j$ is modeled as
-$$x_{ij}\sim \Bin(N_{ij},\alpha_{ij})$$
-where $\alpha_{ij}$ is the population allele frequency, and $N_{ij}$
-is the total number of alleles (red or blue).
+$$x_{ij}\sim \Bin(N_{ij},\alpha_{ij})$$ where $N_{ij}$ is the total
+number of alleles (red or blue), and $\alpha_{ij}$ is the population
+(blue) allele frequency.
 
 This quantity is in turned modeled by
 $$\alpha_{ij}\sim N(\pi_i, c_j\pi_i(1-\pi_i))$$
@@ -342,7 +342,8 @@ multivariate data \cite{lattice,ggplot2}.
 From population genetics, the expectation and variance of allele
 frequency in a population under only genetic drift is given by:
 $$E(\aij)=\pi_i$$
-$$\operatorname{Var}(\aij)=\pi(1-\pi)\left[1-\left(1-\frac{1}{2N}\right)^{t-1}\right]$$
+$$\operatorname{Var}(\aij)=\pi_i(1-\pi_i)
+\left[1-\left(1-\frac{1}{2N_{ij}}\right)^{t-1}\right]$$
 Thus we expect a good simulator of genetic drift to be unbiased for
 the starting ancestral allele frequency, and to have variance
 increasing with each generation of evolution $t$.
@@ -362,8 +363,8 @@ selection.
 For the loci not under selection, the values of allele frequency rest
 near the starting allele frequency, and the variance increases over
 time. Thus, the loci not under selection exhibit the expected
-characteristics and we can conclude the simulator works well for these
-loci.
+characteristics and we can conclude that the simulator works well for
+these loci.
 
 Similarly, for loci under selection, these plots reveal no signs of
 departure from the hypotheses of our evolution simulator. That is,
@@ -372,9 +373,10 @@ under positive selection. For balancing selection, colored populations
 evolve toward an allele frequency of 50\%, accurately simulating
 selection of the heterozygote.
 
-This plot was useful for looking at a few loci. However, to verify
-that all loci behave according to expectations, we used dotplots of
-final allele frequency (\autoref{fixation-endpoints}).
+These time series plots of allele frequency were useful for
+visualizing a few loci. However, to verify that all loci behave
+according to expectations, we used dotplots of final allele frequency
+(\autoref{fixation-endpoints}).
 
 \fig{fixation-endpoints}{Final simulated blue allele frequency for
   1000 loci and 12 populations is shown in a dotplot. Loci are ordered
@@ -389,13 +391,13 @@ This dotplot clearly shows that all loci under selection display no
 signs of selective pressure when in neutral color
 populations. Inversely, all loci which are not under selection behave
 similarly, regardless of population color. Also, the symmetry between
-blue and red alleles is clearly visible. This dotplots efficiently
+blue and red alleles is clearly visible. This dotplot efficiently
 shows that the allele frequencies evolved according to the simulator
 hypotheses.
 
 \subsection{Model estimates}
 
-We are simulating loci under selection, and analyzed them using the
+We are simulating loci under selection, and analyzing them using the
 pure-drift Nicholson model. Thus we expect that the loci under
 selection will not fit the model well.
 
@@ -403,7 +405,7 @@ To diagnose dependence of model fit on selection state, we plot
 ancestral allele frequency estimates for each loci versus actual
 values from the simulation (\autoref{anc-est-plot}).
 
-\fig{anc-est-plot}{Grouped scatterplots illustrate that model
+\fig{anc-est-plot}{This grouped scatterplot illustrates that model
   estimates of ancestral allele frequency are not robust to
   selection.}
 
@@ -443,8 +445,9 @@ To evaluate if the model estimates of our FORTRAN program agree with
 model estimates given by WinBUGS, we used both programs to fit the
 model to a single simulation. Furthermore, Nicholson \etal\ note that
 the model estimates are robust to changes in the prior distribution of
-the $\pi_i$. We fit the Nicholson model to a single data set using
-prior distributions of $\beta(0.7,0.7)$ and $\beta(1,1)=U[0,1]$.
+the $\pi_i$. To verify this claim, we fit the Nicholson model to a
+single data set using prior distributions of $\beta(0.7,0.7)$ and
+$\beta(1,1)=U[0,1]$.
 
 The results of all these model fits are summarized in a scatter plot
 matrix of ancestral allele frequency estimate versus actual value
@@ -472,7 +475,7 @@ since these loci are precisely the ones which do not fit the model, it
 is expected that their estimates may differ.
 
 To investigate the estimates of the population differentiation
-parameters $c_j$, we first note that from population genetics we
+parameters $c_j$, we first note that from population genetics, we
 expect that
 \begin{equation}
   \label{c}
@@ -509,7 +512,7 @@ The simulation diagnostic dotplots also clearly show that the loci
 under selection tend to get fixed at frequencies of 0 or 1 by the end
 of the simulation (\autoref{fixation-endpoints}). These data seem to
 violate the initial hypothesis that we are dealing with SNP data. That
-is, SNP discovery is generally performed on small (<10) numbers of
+is, SNP discovery is generally performed on small ($<10$) numbers of
 individuals, thus data from SNP microarrays is necessarily biased to
 favor loci which we have already observed are polymorphic in these
 individuals. This phenomenon is called the ``ascertainment bias'' in
@@ -562,10 +565,9 @@ simulated loci.
 
 To visualize 3 of the above simulation diagnostics at once, we made
 combined plots of allele frequency time series, ancestral estimates,
-and dotplots \autoref{sim-summary-plot}. This plot is more than just a
-juxtaposition of the 3 individual plots, since we plot one locus over
-time in the upper left, and then highlight this same locus in the
-other 2 plots.
+and dotplots (\autoref{sim-summary-plot}). We link the plots by
+showing one locus over time in the upper left, and then highlight this
+same locus in the other 2 plots.
 
 \fig{sim-summary-plot}{Frame 80/100 of a statistical animation that
   summarizes the evolution simulation. Note the time series plot for a
@@ -649,7 +651,7 @@ The density plots suggest the following classifier for positive loci:
 $$\hat{S}_{i}(h)=\text{state of locus $i$ given threshhold $h$} = 
 \begin{cases}
   \text{positive} & \text{if PPP}_i<h\\
-  \text{none}     & \text{if PPP}_i<h
+  \text{none}     & \text{if PPP}_i\geq h
 \end{cases}
 $$
 where $h$ is a PPP-value threshhold that will determine the false
@@ -699,7 +701,10 @@ These plots are used to investigate the best choice of threshhold for
 the classifier in the simulations. We define the best threshhold $h^*$
 as the one which minimizes the empirical risk:
 $$
-h^* = \stackrel{\text{argmin}}{h\in\{0,1\}} P(\hat{S}_{i}(h)\neq S_i)
+h^* = \stackrel{
+  {\textstyle \text{argmin}}}{
+  {\scriptstyle h\in\{0,1\}}}
+P(\hat{S}_{i}(h)\neq S_i)
 $$
 where $S_i$ is the actual selection state for locus $i$.
 
@@ -778,7 +783,7 @@ PPP-value threshhold for the classifier.
 
 A hypothesis of the Nicholson model is that all loci are
 independent. Genetic markers are found on linear chromosomes, so some
-are closer than others. Some markers may even be in the same
+loci are closer than others. Some markers may even be in the same
 gene. Thus the hypothesis of loci independence is clearly false. Some
 model of correlation between the loci could be introduced into the
 model.
@@ -802,7 +807,7 @@ selection state should be done.
 The model we used only accounts for genetic drift, and detects
 selection as aberrations from the model. An enhanced selection state
 classifier could result if we introduced a more complicated Bayesian
-model, with estimates of the selection state and/or coefficient.
+model, with parameters for the selection state and/or coefficient.
 
 Finally, we should apply this model to several well-characterized
 empirical datasets. Due to the portability of the accompanying R
