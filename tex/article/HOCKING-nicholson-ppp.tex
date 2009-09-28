@@ -82,13 +82,13 @@ The new idea put forth in this work is a classifier for markers under
 selection, based on loci which do not fit well into the pure-drift
 Nicholson model. To quantify the probability that a locus fits the
 pure-drift model, we use Posterior Predictive P-values, or PPP-values
-\cite{pppvalues}. Essentially these PPP-values are the Bayesian
-analogue of the usual frequentist P-values, which indicate departures
-from the model hypotheses. The Nicholson model was designed for, and
-accurately models, independently evolving populations under genetic
-drift. However, loci under selection in addition to genetic drift
-represent departures from the model hypotheses. Thus we use PPP-values
-estimated from the model to identify these aberrent loci.
+\cite{pppvalues,foulley-gautier}. Essentially these PPP-values are the
+Bayesian analogue of the usual frequentist P-values, which indicate
+departures from the model hypotheses. The Nicholson model was designed
+for, and accurately models, independently evolving populations under
+genetic drift. However, loci under selection in addition to genetic
+drift represent departures from the model hypotheses. Thus we use
+PPP-values estimated from the model to identify these aberrent loci.
 
 Furthermore, to test the robustness of our classifier under different
 evolutionary conditions, we test it using extensive simulation of
@@ -267,68 +267,72 @@ summarized using the mean. Thus when we refer to model parameter
 estimates, we mean the sample mean of the values drawn from the
 posterior distribution.
 
-\subsection{PPP-value calculation theory}
+\subsection{PPP-value calculation}
 
 The PPP-value for locus $i$ is defined as
 
 $$\text{PPP}_i = 
-P\left[T_i(y_{ij}^{\text{rep}},\theta)\geq T_i(y_{ij}^{\text{obs}},\theta)|y^{\text{obs}}\right]
+P\left[T(y_{ij}^{\text{rep}},\theta_{ij})>
+       T(y_{ij}^{\text{obs}},\theta_{ij})|y^{\text{obs}}\right]
 $$
 where $y_{ij}=x_{ij}/N_{ij}$ is the allele frequency for locus $i$ and
-population $j$, $\theta$ is a vector of parameters, and $T_i$ is a
-discrepancy criterion applied to replicated (rep) and observed (obs)
-data sets.
+population $j$, $\theta_{ij}=(\pi_i,c_j)$ is a vector of model
+parameters, and $T$ is a discrepancy criterion applied to replicated
+(rep) and observed (obs) data sets.
 
 We need to choose a discrepancy criterion which depends on both data
 and parameters. Here, we use a $\chi^2$-type criterion:
-$$T_i = \sum_{j=1}^P T_{ij}$$
-with
-$$T_{ij} = 
+$$T(y_{ij}|\theta_{ij}) = \sum_{j=1}^P 
 \frac{\left[y_{ij} - E(y_{ij}|\theta_{ij})\right]^2}{
-  \operatorname{Var}(y_{ij}|\theta_{ij})}$$ where
-$\theta_{ij}=(\pi_i,c_j,\sigma_{ij}^2)$ is a vector of parameters and
-$\sigma_{ij}^2$ is $N_{ij}$ times the sampling variance of the observed
-allele frequency given its true value $p_{ij}$ so that
-$\sigma_{ij}^2=p_{ij}(1-p_{ij})$
-
-We define the indicator variable
+  \operatorname{Var}(y_{ij}|\theta_{ij})}
 $$
-I_i =
-\begin{cases}
-  1 & \text{if }T_i(y_{ij}^{\text{rep}},\theta)\geq T_i(y_{ij}^{\text{obs}},\theta) \\
-  0 & \text{otherwise}
-\end{cases}
+where
 $$
-
-\subsection{PPP-value calculation implementation}
+\operatorname{Var}(y_{ij}|\theta_{ij}) = 
+\frac 1 n_{ij} \pi_i(1-\pi_i)
+\left[1+(N_{ij}-1)c_j\right]
+$$
 
 Calculation of PPP-values must be made in the context of sampling from
-a stationary Markov chain. For each iteration $t$ through the chain,
-we define this indicator value:
-
-$$
-p_{ij}^t =
+a stationary Markov chain. In practice, we will compare the
+replicated (rep) and observed (obs) values of this test statistic at
+each iteration in the Markov chain. Thus, we define the indicator
+variable
+\begin{eqnarray*}
+\text{PPP}_i^t &=&
+\begin{cases}
+  1 & \text{if }\sum_{j=1}^P T(y_{ij}^{\text{rep},t},\theta_{ij}^t) 
+                          > T(y_{ij}^{\text{obs},t},\theta_{ij}^t) \\
+  0 & \text{otherwise}
+\end{cases}\\
+&=&
 \begin{cases} 
-1 & \text{if }\left(
+1 & 
+\text{if }
+\sum_{j=1}^P
+\left(
 \frac{\operatorname{Bin}(N_{ij},\alpha_{ij}^t)}{N_{ij}} - \pi_i^t
 \right)^2
->
+-
 \left(
 \frac{Y_{ij}}{N_{ij}} - \pi_i^t
-\right)^2\\
+\right)^2
+>0
+\\
 0 & \text{otherwise}
 \end{cases}
-$$
-where $\operatorname{Bin}(\cdot,\cdot)$ represents a randomly generated
+\end{eqnarray*}
+where $P$ is the number of populations and
+$\operatorname{Bin}(\cdot,\cdot)$ represents a randomly generated
 number from the binomial distribution.
 
 Thus the PPP-value for locus $i$ is given by
-
 $$
-\text{PPP}_i = \frac 1 {PT} \sum_{j=1}^P \sum_{t=1}^T p_{ij}^t
+\text{PPP}_i = \frac 1 {N_{\text{iter}}} 
+\sum_{t=1}^{N_{\text{iter}}} \text{PPP}_{i}^t
 $$
-where $T$ is the number number of values sampled from the posterior
-distribution and $P$ is the number of populations.
+where $N_{\text{iter}}$ is the total number of iterations in the
+Markov chain where we sample from the posterior distribution.
 \section{Results}
 
 \subsection{Simulation verification}
@@ -814,6 +818,29 @@ empirical datasets. Due to the portability of the accompanying R
 package, this should not be a difficult task. The results of our
 simulations suggest that we will be able to accurately identify loci
 under strong selection using this method.
+
+\section{Acknowledgements}
+
+Jean-Louis Foulley and Mathieu Gautier are responsible for the initial
+development of using PPP-values in the Nicholson model for a selection
+state classifier \cite{foulley-gautier}.
+
+Mathieu Gautier was responsible for the initial implementation of the
+Nicholson model in FORTRAN. The code used to fit the model in the R
+package \texttt{nicholsonppp} was adapted from his code.
+
+I thank my principal advisor, Mathieu Gautier, for his insightful
+advice and guidance on this project.
+
+The research groups of G\'en\'etique Animale et Biologie Integrative
+(GABI) and Populations, Statistique, et Genomique (PSGen) at
+l'Institut National de la Recherche Agronomique (INRA) Jouy-en-Josas
+graciously provided office space and computing resources for this
+project.
+
+Thanks to Gilles Celeux of the SELECT laboratory of Institut National
+de Recherche en Informatique et en Automatique (INRIA), who provided
+funding for this project.
 
 \bibliographystyle{plain}
 \bibliography{refs}
