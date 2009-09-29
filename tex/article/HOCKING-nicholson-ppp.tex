@@ -282,57 +282,105 @@ parameters, and $T$ is a discrepancy criterion applied to replicated
 
 We need to choose a discrepancy criterion which depends on both data
 and parameters. Here, we use a $\chi^2$-type criterion:
-$$T(y_{ij}|\theta_{ij}) = \sum_{j=1}^P 
+$$T(y_{ij},\theta_{ij}) = \sum_{j=1}^P 
 \frac{\left[y_{ij} - E(y_{ij}|\theta_{ij})\right]^2}{
   \operatorname{Var}(y_{ij}|\theta_{ij})}
 $$
 where
 $$
-\operatorname{Var}(y_{ij}|\theta_{ij}) = 
-\frac 1 n_{ij} \pi_i(1-\pi_i)
-\left[1+(N_{ij}-1)c_j\right]
+E(y_{ij}|\theta_{ij}) = 
+E(x_{ij}|\theta_{ij}) = \pi_i
 $$
 
-Calculation of PPP-values must be made in the context of sampling from
-a stationary Markov chain. In practice, we will compare the
-replicated (rep) and observed (obs) values of this test statistic at
-each iteration in the Markov chain. Thus, we define the indicator
-variable
+The derivation of the variance of $y_{ij}$ follows. First, we note that we can decompose the Binomial random variable
+$$
+x_{ij}=\sum_{k=1}^{N_{ij}} x_{ijk}
+$$
+into the sum of independent, identically distributed Bernoulli random
+variables $x_{ijk}\sim \text{Bernoulli}(\alpha_{ij})$. Then we can write
+$$
+y_{ij} = \frac 1 {N_{ij}} \sum_{k=1}^{N_{ij}} x_{ijk}
+$$
+
+To find the variance of $y_{ij}$, we will first characterize the
+variance of $x_{ijk}$:
+\newcommand{\Var}{\text{Var}}
+\newcommand{\Cov}{\text{Cov}}
+\begin{eqnarray*}
+  \text{Var}(x_{ijk}) &=&
+  \Var_{\alpha_{ij}} \left[ E(x_{ijk}|\alpha_{ij}) \right] +
+  E_{\alpha_{ij}} \left[ \Var(x_{ijk}|\alpha_{ij}) \right] \\
+  &=&
+  E(\alpha_{ij}^2)-E(\alpha_{ij})^2+
+  E(\alpha_{ij})-E(\alpha_{ij}^2)\\
+  &=&\pi_i(1-\pi_i)
+\end{eqnarray*}
+
+Using a similar derivation, we find that
+$$
+\Cov(x_{ijk},x_{ijk^\prime}) = c_j \pi_i(1-\pi_i)
+$$
+
+Using the previous results, we can derive the desired result:
+\begin{eqnarray*}
+  \operatorname{Var}(y_{ij}|\theta_{ij}) &=&
+  \Var\left(\sum_{k=1}^{N_{ij}} \frac{x_{ijk}}{N_{ij}} \right)\\
+  &=&
+  \frac{ 1 }{N_{ij}^2}\left[
+    \sum_{k=1}^{N_{ij}} \Var(x_{ijk}) +
+    \sum_{k=1}^{N_{ij}} \sum_{k^\prime \neq k} \Cov(x_{ijk},x_{ijk^\prime}) 
+\right]\\
+  &=&
+  \frac{ 1 }{N_{ij}^2}\left[
+    \sum_{k=1}^{N_{ij}} \pi_i(1-\pi_i) +
+    \sum_{k=1}^{N_{ij}} \sum_{k^\prime \neq k} c_j\pi_i(1-\pi_i) 
+\right]\\
+  &=&
+  \frac{
+    N_{ij} \pi_i(1-\pi_i) +
+    N_{ij}(N_{ij}-1) c_j\pi_i(1-\pi_i) 
+  }{N_{ij}^2}\\
+  &=&
+  \frac 1 {N_{ij}} \pi_i(1-\pi_i)
+  \left[1+(N_{ij}-1)c_j\right]
+\end{eqnarray*}
+\newcommand{\Bin}{\operatorname{Bin}}
+
+In practice, we will calculate the discrepancy criterion $T$ for the
+replicated (rep) and observed (obs) data at each iteration in the
+Markov chain. Thus, using $^t$ to denote the value of a variable in
+the $t$-th iteration through the Markov chain,
+\begin{eqnarray*}
+  T(y_{ij}^{\text{rep},t},\theta_{ij}^t) &=&
+  \frac{\left(\Bin(N_{ij},\alpha_{ij}^t)/N_{ij} - \pi_i^t\right)^2}{
+  \pi^t_i(1-\pi^t_i) \left[1+(N_{ij}-1)c^t_j\right]/N_{ij}}\\    
+  T(y_{ij}^{\text{obs},t},\theta_{ij}^t) &=&
+  \frac{\left(Y_{ij}/N_{ij} - \pi_i^t\right)^2}{
+  \pi^t_i(1-\pi^t_i) \left[1+(N_{ij}-1)c^t_j\right]/N_{ij}}\\
+\end{eqnarray*}
+where $\Bin(\cdot,\cdot)$ represents a randomly generated number from
+the binomial distribution.
+
+Next, we define the indicator variable
 \begin{eqnarray*}
 \text{PPP}_i^t &=&
 \begin{cases}
   1 & \text{if }\sum_{j=1}^P T(y_{ij}^{\text{rep},t},\theta_{ij}^t) 
-                          > T(y_{ij}^{\text{obs},t},\theta_{ij}^t) \\
+                          - T(y_{ij}^{\text{obs},t},\theta_{ij}^t) > 0\\
   0 & \text{otherwise}
-\end{cases}\\
-&=&
-\begin{cases} 
-1 & 
-\text{if }
-\sum_{j=1}^P
-\left(
-\frac{\operatorname{Bin}(N_{ij},\alpha_{ij}^t)}{N_{ij}} - \pi_i^t
-\right)^2
--
-\left(
-\frac{Y_{ij}}{N_{ij}} - \pi_i^t
-\right)^2
->0
-\\
-0 & \text{otherwise}
 \end{cases}
 \end{eqnarray*}
-where $P$ is the number of populations and
-$\operatorname{Bin}(\cdot,\cdot)$ represents a randomly generated
-number from the binomial distribution.
+where $P$ is the number of populations. We sum over populations since
+we need to have a criterion for each locus at each iteration.
 
-Thus the PPP-value for locus $i$ is given by
+Finally, the PPP-value for locus $i$ is calculated at the end of the
+$N_{\text{iter}}$ iterations of Markov chain sampling from the
+posterior distribution:
 $$
 \text{PPP}_i = \frac 1 {N_{\text{iter}}} 
 \sum_{t=1}^{N_{\text{iter}}} \text{PPP}_{i}^t
 $$
-where $N_{\text{iter}}$ is the total number of iterations in the
-Markov chain where we sample from the posterior distribution.
+
 \section{Results}
 
 \subsection{Simulation verification}
@@ -770,7 +818,7 @@ selection state of each locus.
 The PPP-values are an effective classifier for selection state when
 the selection coefficient of the locus is sufficiently strong
 ($s_i>0.01$). The false positive rate of the classifier drops as the
-selection strength of the loci increase. But if there are an
+selection strength of the loci increases. But if there are an
 overwhelming majority of loci not under selection, there will
 inevitably be high false positive rates.
 
@@ -830,7 +878,10 @@ Nicholson model in FORTRAN. The code used to fit the model in the R
 package \texttt{nicholsonppp} was adapted from his code.
 
 I thank my principal advisor, Mathieu Gautier, for his insightful
-advice and guidance on this project.
+advice and guidance on this project. I also thank my secondary
+advisor, Jean-Louis Foulley, for theoretical insights into Bayesian
+statistics, and in particular, the derivation of the variance used in
+PPP-value calculations.
 
 The research groups of G\'en\'etique Animale et Biologie Integrative
 (GABI) and Populations, Statistique, et Genomique (PSGen) at
@@ -838,9 +889,9 @@ l'Institut National de la Recherche Agronomique (INRA) Jouy-en-Josas
 graciously provided office space and computing resources for this
 project.
 
-Thanks to Gilles Celeux of the SELECT laboratory of Institut National
-de Recherche en Informatique et en Automatique (INRIA), who provided
-funding for this project.
+Thanks to Gilles Celeux of the SELECT laboratory of the Institut
+National de Recherche en Informatique et en Automatique (INRIA), who
+provided funding for this project.
 
 \bibliographystyle{plain}
 \bibliography{refs}
