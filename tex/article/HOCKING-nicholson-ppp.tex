@@ -286,54 +286,83 @@ $$T(y_{ij},\theta_{ij}) = \sum_{j=1}^P
 \frac{\left[y_{ij} - E(y_{ij}|\theta_{ij})\right]^2}{
   \operatorname{Var}(y_{ij}|\theta_{ij})}
 $$
-where
-$$
-E(y_{ij}|\theta_{ij}) = 
-E(x_{ij}|\theta_{ij}) = \pi_i
-$$
 
-The derivation of the variance of $y_{ij}$ follows. First, we note that we can decompose the Binomial random variable
+The derivation of the expectation and variance of $y_{ij}$
+follows. First, we note that we can decompose the Binomial random
+variable
 $$
 x_{ij}=\sum_{k=1}^{N_{ij}} x_{ijk}
 $$
 into the sum of independent, identically distributed Bernoulli random
 variables $x_{ijk}\sim \text{Bernoulli}(\alpha_{ij})$. Then we can write
 $$
-y_{ij} = \frac 1 {N_{ij}} \sum_{k=1}^{N_{ij}} x_{ijk}
+y_{ij}|\theta_{ij} = \frac 1 {N_{ij}} \sum_{k=1}^{N_{ij}} x_{ijk}
 $$
 
-To find the variance of $y_{ij}$, we will first characterize the
-variance of $x_{ijk}$:
+To find the expectation and variance of $y_{ij}$ given the
+hyperparameters $\theta_{ij}$, we will first characterize the moments
+of $x_{ijk}$, using the fact that $\alpha_{ij}\sim
+N(\pi_i,c_j\pi_i(1-\pi_i))$: \newcommand{\eaij}{E_{{\alpha_{ij}}}}
+\newcommand{\vaij}{\Var_{{\alpha_{ij}}}}
+$$
+E(x_{ijk}) = \eaij \left[ E(x_{ijk}|{\alpha_{ij}})\right] = E({\alpha_{ij}}) = \pi_i
+$$
+
 \newcommand{\Var}{\text{Var}}
 \newcommand{\Cov}{\text{Cov}}
 \begin{eqnarray*}
   \text{Var}(x_{ijk}) &=&
   \Var_{\alpha_{ij}} \left[ E(x_{ijk}|\alpha_{ij}) \right] +
   E_{\alpha_{ij}} \left[ \Var(x_{ijk}|\alpha_{ij}) \right] \\
+  &=& 
+  \vaij(\alpha_{ij}) + \eaij({\alpha_{ij}})-\eaij({\alpha_{ij}}^2)
+  \\
   &=&
-  E(\alpha_{ij}^2)-E(\alpha_{ij})^2+
-  E(\alpha_{ij})-E(\alpha_{ij}^2)\\
+  \eaij(\alpha_{ij}^2)-\eaij(\alpha_{ij})^2+
+  \eaij(\alpha_{ij})-\eaij(\alpha_{ij}^2)\\
+  &=&
+  \eaij(\alpha_{ij})\left(1-\eaij(\alpha_{ij})\right)+
+  \\
   &=&\pi_i(1-\pi_i)
 \end{eqnarray*}
 
 Using a similar derivation, we find that
+\begin{eqnarray*}
+\Cov(x_{ijk},x_{ijk^\prime})
+&=& \eaij\big[
+\underbrace{\Cov(x_{ijk},x_{ijk^\prime}|{\alpha_{ij}})}_0
+\big]
++
+\Cov\big[
+\underbrace{E(x_{ijk}|{\alpha_{ij}})}_{\alpha_{ij}},
+\underbrace{E(x_{ijk^\prime}|{\alpha_{ij}})}_{\alpha_{ij}}
+\big]\\
+&=& 0 + \Cov({\alpha_{ij}},{\alpha_{ij}})\\
+&=& \Var({\alpha_{ij}})\\
+&=& c_j \pi_i(1-\pi_i)
+\end{eqnarray*}
+
+Using the previous results, we can derive the expectation and variance
+of $y_{ij}$, which we need to calculate the PPP-values:
 $$
-\Cov(x_{ijk},x_{ijk^\prime}) = c_j \pi_i(1-\pi_i)
+E(y_{ij}|\theta_{ij}) = 
+\frac 1 {N_{ij}} \sum_{k=1}^{N_{ij}} E(x_{ijk}) = 
+\frac 1 {N_{ij}} \sum_{k=1}^{N_{ij}} \pi_i = 
+\pi_i
 $$
 
-Using the previous results, we can derive the desired result:
 \begin{eqnarray*}
   \operatorname{Var}(y_{ij}|\theta_{ij}) &=&
   \Var\left(\sum_{k=1}^{N_{ij}} \frac{x_{ijk}}{N_{ij}} \right)\\
   &=&
   \frac{ 1 }{N_{ij}^2}\left[
     \sum_{k=1}^{N_{ij}} \Var(x_{ijk}) +
-    \sum_{k=1}^{N_{ij}} \sum_{k^\prime \neq k} \Cov(x_{ijk},x_{ijk^\prime}) 
+    2\sum_{k=1}^{N_{ij}} \sum_{k^\prime=k+1}^{N_{ij}} \Cov(x_{ijk},x_{ijk^\prime}) 
 \right]\\
   &=&
   \frac{ 1 }{N_{ij}^2}\left[
     \sum_{k=1}^{N_{ij}} \pi_i(1-\pi_i) +
-    \sum_{k=1}^{N_{ij}} \sum_{k^\prime \neq k} c_j\pi_i(1-\pi_i) 
+    2\sum_{k=1}^{N_{ij}} \sum_{k^\prime=k+1}^{N_{ij}} c_j\pi_i(1-\pi_i) 
 \right]\\
   &=&
   \frac{
@@ -344,7 +373,7 @@ Using the previous results, we can derive the desired result:
   \frac 1 {N_{ij}} \pi_i(1-\pi_i)
   \left[1+(N_{ij}-1)c_j\right]
 \end{eqnarray*}
-\newcommand{\Bin}{\operatorname{Bin}}
+\renewcommand{\Bin}{\operatorname{Bin}}
 
 In practice, we will calculate the discrepancy criterion $T$ for the
 replicated (rep) and observed (obs) data at each iteration in the
@@ -365,8 +394,8 @@ Next, we define the indicator variable
 \begin{eqnarray*}
 \text{PPP}_i^t &=&
 \begin{cases}
-  1 & \text{if }\sum_{j=1}^P T(y_{ij}^{\text{rep},t},\theta_{ij}^t) 
-                          - T(y_{ij}^{\text{obs},t},\theta_{ij}^t) > 0\\
+  1 & \text{if }\sum_{j=1}^P\left[ T(y_{ij}^{\text{rep},t},\theta_{ij}^t) 
+                          - T(y_{ij}^{\text{obs},t},\theta_{ij}^t)\right] > 0\\
   0 & \text{otherwise}
 \end{cases}
 \end{eqnarray*}
@@ -393,7 +422,7 @@ multivariate data \cite{lattice,ggplot2}.
 
 From population genetics, the expectation and variance of allele
 frequency in a population under only genetic drift is given by:
-$$E(\aij)=\pi_i$$
+$$E({\alpha_{ij}})=\pi_i$$
 $$\operatorname{Var}(\aij)=\pi_i(1-\pi_i)
 \left[1-\left(1-\frac{1}{2N_{ij}}\right)^{t-1}\right]$$
 Thus we expect a good simulator of genetic drift to be unbiased for
