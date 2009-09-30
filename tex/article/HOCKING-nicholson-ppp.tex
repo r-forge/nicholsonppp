@@ -5,7 +5,8 @@
 \usepackage{amsmath,amssymb}
 
 \title{Identifying genetic loci under selective pressure using a
-  posterior predictive p-value classifier} \author{Toby Dylan Hocking}
+  hierarchical Bayesian model with a posterior predictive p-value
+  classifier} \author{Toby Dylan Hocking}
 
 \begin{document}
 
@@ -113,8 +114,9 @@ independent populations, evolving over $T$ generations.
 To model SNP data, each locus has only 2 possible alleles, thus we
 denote the allele frequency for locus $i$ in population $j$ at
 generation $t$ as $\aij$, with $0\leq \aij\leq 1$. To assign ancestral
-allele frequencies $\pi_i=\alpha_{i,1}(1)=...=\alpha_{i,P}(1)$, we
-draw from a truncated $\beta(0.7,0.7)$ distribution
+allele frequencies 
+$$\pi_i=\alpha_{i1}(1)=...=\alpha_{iP}(1)$$
+we draw from a truncated $\beta(0.7,0.7)$ distribution
 (\autoref{beta}). That is, for all $i$,
 $$P(\pi_i<0.05)=P(\pi_i>0.95)=0$$
 and if $Z\sim\beta(0.7,0.7)$,
@@ -231,8 +233,8 @@ $$
 
 The point of Bayesian statistics is to exploit Bayes' Rule to obtain
 posterior distributions of the model parameters conditional on the
-data. Generally, if use $x$ to signify the observed data and $\theta$
-to denote the model parameters, we can write the posterior
+data. Generally, if we use $x$ to signify the observed data and
+$\theta$ to denote the model parameters, we can write the posterior
 distribution as
 \begin{equation}
 \label{bayes}
@@ -422,7 +424,7 @@ multivariate data \cite{lattice,ggplot2}.
 
 From population genetics, the expectation and variance of allele
 frequency in a population under only genetic drift is given by:
-$$E({\alpha_{ij}})=\pi_i$$
+$$E(\aij)=\pi_i$$
 $$\operatorname{Var}(\aij)=\pi_i(1-\pi_i)
 \left[1-\left(1-\frac{1}{2N_{ij}}\right)^{t-1}\right]$$
 Thus we expect a good simulator of genetic drift to be unbiased for
@@ -431,8 +433,8 @@ increasing with each generation of evolution $t$.
 
 We visually checked how allele frequencies evolve over time by
 examining lineplots of allele frequency over time
-(\autoref{loci-over-time}). This plot shows 2 loci under positive
-selection, 2 loci under balancing selection, and 2 loci not under
+(\autoref{loci-over-time}). This plot shows 2 loci under balancing
+selection, 2 loci not under selection, and 2 loci under positive
 selection.
 
 \fig{loci-over-time}{Allele frequency evolution of 6 loci in 12
@@ -451,8 +453,8 @@ Similarly, for loci under selection, these plots reveal no signs of
 departure from the hypotheses of our evolution simulator. That is,
 high blue allele frequency is clearly favored for blue populations
 under positive selection. For balancing selection, colored populations
-evolve toward an allele frequency of 50\%, accurately simulating
-selection of the heterozygote.
+evolve toward an allele frequency of 50\%, accurately simulating the
+heterozygote advantage.
 
 These time series plots of allele frequency were useful for
 visualizing a few loci. However, to verify that all loci behave
@@ -482,7 +484,7 @@ We are simulating loci under selection, and analyzing them using the
 pure-drift Nicholson model. Thus we expect that the loci under
 selection will not fit the model well.
 
-To diagnose dependence of model fit on selection state, we plot
+To diagnose how selection state influences model fit, we plot
 ancestral allele frequency estimates for each loci versus actual
 values from the simulation (\autoref{anc-est-plot}).
 
@@ -534,9 +536,9 @@ The results of all these model fits are summarized in a scatter plot
 matrix of ancestral allele frequency estimate versus actual value
 (\autoref{notbeta}).
 
-\fig{notbeta}{Scatter plot matrix for various values of
-  ancestral allele frequency $\pi$ for a simulated data set (actual
-  simulated values indicated by row/column simulated). Models using
+\fig{notbeta}{Scatter plot matrix for various values of ancestral
+  allele frequency $\pi_i$ for a simulated data set (actual simulated
+  values indicated by the row/column labeled simulated). Models using
   priors that follow a $\beta(1,1)$ (indicated by fortranr1 and
   winbugs1) and $\beta(0.7,0.7)$ (fortran.old, fortranr0.7, and
   winbugs0.7) were fit using WinBUGS and our FORTRAN program. For
@@ -560,7 +562,7 @@ parameters $c_j$, we first note that from population genetics, we
 expect that
 \begin{equation}
   \label{c}
- c_j = 1 - (1 - \frac 1 N_j)^t\approx t/N_j  
+ c_j = 1 - (1 - \frac 1 {N_j})^t\approx t/N_j  
 \end{equation}
 where $t$ is number of generations and $N_j$ is effective population
 size of population $j$.
@@ -594,10 +596,9 @@ under selection tend to get fixed at frequencies of 0 or 1 by the end
 of the simulation (\autoref{fixation-endpoints}). These data seem to
 violate the initial hypothesis that we are dealing with SNP data. That
 is, SNP discovery is generally performed on small ($<10$) numbers of
-individuals, thus data from SNP microarrays is necessarily biased to
-favor loci which we have already observed are polymorphic in these
-individuals. This phenomenon is called the ``ascertainment bias'' in
-the literature.
+individuals, so data from SNP microarrays is necessarily biased to
+favor loci which are polymorphic in these individuals. This phenomenon
+is called the ``ascertainment bias'' in the literature.
 
 To characterize if the model estimates are sensitive to the
 ascertainment bias, we fit several models using non-fixed subsets of
@@ -789,7 +790,7 @@ P(\hat{S}_{i}(h)\neq S_i)
 $$
 where $S_i$ is the actual selection state for locus $i$.
 
-To identify the threshhold values of empiricical risk minimization, we
+To identify the threshhold values of empirical risk minimization, we
 traced a horizontal grey line on the minimum value of the incorrect
 curve, and identified the corresponding threshhold value with a
 vertical grey line.
@@ -812,8 +813,9 @@ specificity is the false positive rate.
   powerful than those in the other 2 simulations.}
 
 The ROCs in \autoref{roc-desc} show that increasing selection
-strengths $s_i$ tend to increase the area under the curve, agreeing
-with the densityplots.
+strengths $s_i$ tend to increase the area under the curve. This
+indicates that loci under stronger selection are easier to distinguish
+from loci not under selection.
 
 In \autoref{roc-s}, note how the data sets with 4 populations generate
 decision rules which are noticeably less powerful than those in the
@@ -865,9 +867,9 @@ PPP-value threshhold for the classifier.
 A hypothesis of the Nicholson model is that all loci are
 independent. Genetic markers are found on linear chromosomes, so some
 loci are closer than others. Some markers may even be in the same
-gene. Thus the hypothesis of loci independence is clearly false. Some
-model of correlation between the loci could be introduced into the
-model.
+gene. Thus the hypothesis of loci independence is clearly false,
+suggesting that some model of correlation between the loci could be
+introduced into the model.
 
 The Nicholson model supposes that all populations diverge from their
 common ancestor at the same time, which is false. Thus another
@@ -912,9 +914,9 @@ advisor, Jean-Louis Foulley, for theoretical insights into Bayesian
 statistics, and in particular, the derivation of the variance used in
 PPP-value calculations.
 
-The research groups of G\'en\'etique Animale et Biologie Integrative
-(GABI) and Populations, Statistique, et Genomique (PSGen) at
-l'Institut National de la Recherche Agronomique (INRA) Jouy-en-Josas
+The research groups of G\'en\'etique Animale et Biologie Int\'egrative
+(GABI) and Population, Statistique et G\'enome (PSGen) at l'Institut
+National de la Recherche Agronomique (INRA) in Jouy-en-Josas
 graciously provided office space and computing resources for this
 project.
 
