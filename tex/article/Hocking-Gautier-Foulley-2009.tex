@@ -6,7 +6,7 @@
 
 \title{Identifying genetic loci under selective pressure using a
   hierarchical Bayesian model with a posterior predictive p-value
-  classifier} \author{Toby Dylan Hocking}
+  classifier} \author{Toby Dylan Hocking\\Mathieu Gautier\\Jean-Louis Foulley}
 
 \begin{document}
 
@@ -104,163 +104,17 @@ article can be reproduced by using the code published in the R package
 
 \section{Methods}
 
-\subsection{Simulating genetic drift and selection}
+\subsection{Model implementation}
 
 To simulate selection and genetic drift in several independent
 populations, we use a modified version of the simulator in
-\cite{Beaumont-Balding}. We assume $L$ independent loci, and $P$
-independent populations, evolving over $T$ generations.
-
-To model SNP data, each locus has only 2 possible alleles, thus we
-denote the allele frequency for locus $i$ in population $j$ at
-generation $t$ as $\aij$, with $0\leq \aij\leq 1$. To assign ancestral
-allele frequencies 
-$$\pi_i=\alpha_{i1}(1)=...=\alpha_{iP}(1)$$
-we draw from a truncated $\beta(0.7,0.7)$ distribution
-(\autoref{beta}). That is, for all $i$,
-$$P(\pi_i<0.05)=P(\pi_i>0.95)=0$$
-and if $Z\sim\beta(0.7,0.7)$,
-$$P(\pi_i=0.05)=P(\pi_i=0.95)=P(Z<0.05)$$
-
-We chose to truncate the distribution of initial allele frequencies so
-as to reduce the number of loci which are ``fixed'' with allele
-frequency 0 or 1 at the end of the simulation.
-
-This choice is motivated by population genetics, which gives us the
-result that at equilibrium, under mutation and genetic drift, the
-distribution of allele frequencies approximately follow a
-$\beta(4N\mu,4N\mu)$ distribution, where $N$ is the effective
-population size and $\mu$ is the mutation rate \cite{Wright}. We
-also considered using a truncated $\beta(1,1)$ distribution, which is
-the same as the $U[0,1]$ distribution, but no noticeable difference
-was observed.
-
-\fig[0.75]{beta}{Distribution of ancestral allele frequencies in our
-  simulations follow a truncated $\beta(0.7,0.7)$ distribution.}
-
-If we assign the colors blue and red to the 2 alleles, and we define
-$\aij$ as the blue allele frequency for locus $i$ in population $j$ at
-generation $t$, then $1-\aij$ is the red allele frequency. The color
-of the allele will determine its fate under selection in populations
-which each have a background color of either red or blue. Population
-color is chosen at random, independently for each locus, at the
-beginning of the simulation, with probability 0.4 for each of red or
-blue, and 0.2 for neutral populations where neither allele is favored.
-
-The idea is to simulate the fact that some alleles are favored in some
-environments, while disfavored in others. Thus, under positive
-selection, red alleles will be favored in red populations, and
-disfavored in blue populations (vice versa for blue alleles). Under
-balancing selection, it is advantageous to have both a blue and red
-allele. This simulates the heterozygote advantage, a phenomenon
-classically observed in the gene that controls malaria resistence and
-sickle-cell anemia affectation.
-
-The allele frequency changes in each generation via
-2 mechanisms: drift and selection. Drift introduces some random
-variability up or down in allele frequency, independent of population
-color:
-$$\aijs \sim \operatorname{Bin}(N_{ij},\alpha_{ij}(t-1))$$
-The effect of drift grows more important relative to selection as
-population size $N_{ij}$ diminishes.
-
-Then to update the allele frequency for selection, we first calculate
-relative fitness of each diploid genotype. Relative fitness of a locus
-is based on the selection coefficient for that locus $s_i\in \RR$,
-which is a parameter of the simulation, usually between 0 and 1 in
-empirical studies. Selection for a locus grows more important relative
-to genetic drift as $s_i$ increases.
-$$
-\begin{array}{cccll}
-\wij{BB} & \wij{BR} & \wij{RR} & \text{selection type} & \text{population color}\\
-\hline
-1 & 1+s_i/2 & 1+s_i & \text{positive}& \text{red}\\
-1+s_i & 1+s_i/2 & 1 & \text{positive}& \text{blue}\\
-1 & 1+s_i & 1 & \text{balancing}& \\
-1 & 1 & 1 & \text{neutral}& 
-\end{array}
-$$
-
-Then we update blue allele frequency for selection based on
-Hardy-Weinberg equilibrium, which allows us to derive expressions for
-genotype frequencies in terms of allele frequency:
-
-$$\aij = \frac{
-\wij{BB}\aijs^2 + \wij{BR}\aijs[1-\aijs]/2 }{
-\wij{BB}\aijs^2 + \wij{BR}\aijs[1-\aijs] + \wij{RR}[1-\aijs]^2
-   }$$
-
-   We repeat the process for $t=2, ..., T$, and we take values
-   $\alpha_{ij}(T)$ as the output allele frequencies of the
-   simulation.
-
-
-
-\subsection{The hierarchical bayesian Nicholson model}
-
-To model the variation between observed allele frequencies in
-different populations, the Nicholson model assigns a divergence
-parameter $c_j$ to each population. The number of observed (blue)
-alleles for locus $i$ in population $j$ is modeled as
-$$x_{ij}\sim \Bin(N_{ij},\alpha_{ij})$$ where $N_{ij}$ is the total
-number of alleles (red or blue), and $\alpha_{ij}$ is the population
-(blue) allele frequency.
-
-This quantity is in turned modeled by
-$$\alpha_{ij}\sim N(\pi_i, c_j\pi_i(1-\pi_i))$$
-a normal distribution truncated to the interval [0,1]. The
-differentiation parameter $c_j$ is motivated by population genetics
-\cite[section 2.2]{nicholson}.
-
-The distribution of the hyperparameter for ancestral allele frequency
-follows the prior distribution
-$$\pi_i\sim \beta(a,a)$$
-Values $a\in\{0.7,1\}$ were used, and showed similar results.
-
-The population divergence hyperparameter follows the prior
-distribution $$c_j\sim U[0,1]$$
-
-The relationship between model parameters is more clearly summarised
-in the following directed acyclic graph:
-
-$$
-\xymatrix{
-  \pi_i \ar[rd] & & c_j \ar[ld] \\
-  & \alpha_{ij} \ar[d] & \\
-  & (x_{ij},N_{ij})
-}
-$$
-
-The point of Bayesian statistics is to exploit Bayes' Rule to obtain
-posterior distributions of the model parameters conditional on the
-data. Generally, if we use $x$ to signify the observed data and
-$\theta$ to denote the model parameters, we can write the posterior
-distribution as
-\begin{equation}
-\label{bayes}
-P(\theta|x) = \frac{P(x,\theta)}{P(x)} = 
-\frac{P(x,\theta)}{\int P(x,\theta)d\theta} =
-\frac{f(x|\theta)g(\theta)}{\int f(x|\theta)g(\theta)d\theta}
-\end{equation}
-where $f$ is the density of the data $x$ and $g$ is the density of the
-model parameters $\theta$.
-
-Since it is often difficult to evaluate the integral in the
-denominator of equation \ref{bayes}, we instead turn to Markov Chain
-Monte Carlo techniques to sample from the posterior
-distribution. Essentially, we use a Metropolis-Hastings algorithm to
-draw samples from a Markov chain, thus giving us an approximation of
-the posterior distribution \cite{hastings}.
-
-Thus, for each step in the chain $t$, we sample from the following
-posterior distributions:
-$$\alpha^t = P(\alpha|c^{t-1},\pi^{t-1},x)$$
-$$\pi^t = P(\pi|c^{t-1},\alpha^t,a)$$
-$$c^t = P(c|\pi^t,\alpha^t)$$
+\cite{Beaumont-Balding}. We model these data using the pure-drift
+Nicholson model \cite{nicholson}.
 
 The model was first implemented using WinBUGS \cite{winbugs}. To
 provide speed optimizations for the model fitting, a faster
-model-fitting program was written in FORTRAN.
+model-fitting program was written in FORTRAN. We compared parameter
+estimates of the two programs and found no significant differences.
 
 The posterior distribution for each model parameter was sampled 1000
 times using MCMC, giving us an approximate posterior
@@ -323,7 +177,7 @@ $$
   \eaij(\alpha_{ij}^2)-\eaij(\alpha_{ij})^2+
   \eaij(\alpha_{ij})-\eaij(\alpha_{ij}^2)\\
   &=&
-  \eaij(\alpha_{ij})\left(1-\eaij(\alpha_{ij})\right)+
+  \eaij(\alpha_{ij})\left(1-\eaij(\alpha_{ij})\right)
   \\
   &=&\pi_i(1-\pi_i)
 \end{eqnarray*}
@@ -416,50 +270,8 @@ $$
 
 \subsection{Simulation verification}
 
-After obtaining allele frequencies from the simulator, we can do
-diagnostic plots to visually verify that the allele frequencies are
-evolving according to the theoretical evolution framework we had
-envisioned. R packages lattice and ggplot2 are used to visualize these
-multivariate data \cite{lattice,ggplot2}.
-
-From population genetics, the expectation and variance of allele
-frequency in a population under only genetic drift is given by:
-$$E(\aij)=\pi_i$$
-$$\operatorname{Var}(\aij)=\pi_i(1-\pi_i)
-\left[1-\left(1-\frac{1}{2N_{ij}}\right)^{t-1}\right]$$
-Thus we expect a good simulator of genetic drift to be unbiased for
-the starting ancestral allele frequency, and to have variance
-increasing with each generation of evolution $t$.
-
-We visually checked how allele frequencies evolve over time by
-examining lineplots of allele frequency over time
-(\autoref{loci-over-time}). This plot shows 2 loci under balancing
-selection, 2 loci not under selection, and 2 loci under positive
-selection.
-
-\fig{loci-over-time}{Allele frequency evolution of 6 loci in 12
-  populations over 100 generations. Each panel represents a different
-  locus, and each line therein represents a different
-  population. Shown are two loci for balancing selection (left), no
-  selection (middle), and positive selection (right).}
-
-For the loci not under selection, the values of allele frequency rest
-near the starting allele frequency, and the variance increases over
-time. Thus, the loci not under selection exhibit the expected
-characteristics and we can conclude that the simulator works well for
-these loci.
-
-Similarly, for loci under selection, these plots reveal no signs of
-departure from the hypotheses of our evolution simulator. That is,
-high blue allele frequency is clearly favored for blue populations
-under positive selection. For balancing selection, colored populations
-evolve toward an allele frequency of 50\%, accurately simulating the
-heterozygote advantage.
-
-These time series plots of allele frequency were useful for
-visualizing a few loci. However, to verify that all loci behave
-according to expectations, we used dotplots of final allele frequency
-(\autoref{fixation-endpoints}).
+To verify that all loci behave according to expectations, we used
+dotplots of final allele frequency (\autoref{fixation-endpoints}).
 
 \fig{fixation-endpoints}{Final simulated blue allele frequency for
   1000 loci and 12 populations is shown in a dotplot. Loci are ordered
@@ -478,7 +290,7 @@ blue and red alleles is clearly visible. This dotplot efficiently
 shows that the allele frequencies evolved according to the simulator
 hypotheses.
 
-\subsection{Model estimates}
+\subsection{Ancestral allele frequency estimates are sensitive to selection}
 
 We are simulating loci under selection, and analyzing them using the
 pure-drift Nicholson model. Thus we expect that the loci under
@@ -499,63 +311,7 @@ Nicholson model was designed with only genetic drift in mind. Thus it
 is expected that model parameters for loci under selection are not
 estimated well.
 
-To examine the robustness of these ancestral allele frequency
-estimates to changes in number of populations and number of
-generations, we did exhaustive simulations of several parameter
-values. We did 9 simulations, fitting the model for each of them, with
-25, 50, or 100 generations, and 4, 8, or 12 populations.
-
-To display the results of the ancestral allele frequency estimates, we
-used trellised scatterplots of estimates versus actual values
-(\autoref{gen-pop}).
-
-\fig{gen-pop}{Scatterplots of estimated versus actual ancestral allele
-  frequency, trellised by number of generations and number of
-  populations.}
-
-From what we know about genetic drift, we expect that augmenting the
-number of generations will increase the variance of the allele
-frequencies, and thus increase the variance of the ancestral allele
-frequency estimate. Similarly, we expect that increasing the number of
-populations will give us more information about the ancestral allele
-frequency, leading to more accurate estimates.
-
-This series of scatterplots clearly shows that the estimates behave as
-expected. Less accurate estimates are clearly seen with more
-generations and fewer populations.
-
-To evaluate if the model estimates of our FORTRAN program agree with
-model estimates given by WinBUGS, we used both programs to fit the
-model to a single simulation. Furthermore, Nicholson \etal\ note that
-the model estimates are robust to changes in the prior distribution of
-the $\pi_i$. To verify this claim, we fit the Nicholson model to a
-single data set using prior distributions of $\beta(0.7,0.7)$ and
-$\beta(1,1)=U[0,1]$.
-
-The results of all these model fits are summarized in a scatter plot
-matrix of ancestral allele frequency estimate versus actual value
-(\autoref{notbeta}).
-
-\fig{notbeta}{Scatter plot matrix for various values of ancestral
-  allele frequency $\pi_i$ for a simulated data set (actual simulated
-  values indicated by the row/column labeled simulated). Models using
-  priors that follow a $\beta(1,1)$ (indicated by fortranr1 and
-  winbugs1) and $\beta(0.7,0.7)$ (fortran.old, fortranr0.7, and
-  winbugs0.7) were fit using WinBUGS and our FORTRAN program. For
-  alleles under positive selection, there are small discrepancies
-  between the FORTRAN and WinBUGS programs.}
-
-The scatter plot matrix clearly shows that there are no significant
-differences between models that use the same program. That is, the
-choice of prior distribution of the ancestral allele frequencies has
-little influence on model estimates.
-
-However, there appears to be a difference between estimates from
-WinBUGS and our FORTRAN program, uniquely for loci under positive
-selection. Our FORTRAN parameter estimates are systematically higher
-than the corresponding WinBUGS estimates for these loci. However,
-since these loci are precisely the ones which do not fit the model, it
-is expected that their estimates may differ.
+\subsection{Population differentiation estimates are robust to selection}
 
 To investigate the estimates of the population differentiation
 parameters $c_j$, we first note that from population genetics, we
@@ -570,100 +326,28 @@ size of population $j$.
 Note that this approximation implies that we expect estimates of $c_j$
 to increase linearly over time. To visualize this linear trend, we
 used lineplots of the estimate differentiation parameter $c_j$ over
-time $t$ (\autoref{c-over-time-all}).
+time $t$ (\autoref{c-over-time-diff}).
 
-\fig[0.9]{c-over-time-all}{Lineplots of differentiation parameter
+\fig[0.9]{c-over-time-diff}{Lineplots of differentiation parameter
   estimates $c_j$ evolving over time. The model was fit for 4
   generations (50,100,150,200). Theoretical line shown in green is
-  $t/N_j$.}
+  $t/N_j$. (FIXME: NEED BETTER FIGURE THAT SHOWS ROBUSTNESS TO
+  SELECTION)}
 
 Note the linear behavior of the model estimates, as expected. However,
 the slopes of the lines do not always match the expected theoretical
 slopes, which can be attributed to approximation errors in
 \autoref{c}.
 
-We did simulations with uniform and variable population sizes to
-determine if $c_j$ estimates were robust to population size
-fluctuations. By comparing the panels in \autoref{c-over-time-all}, it
-is evident that the model fits for population size 1000 fall in the
-same range for both simulations. Thus we can conclude the model is
-robust against population size variations.
-
-\subsection{Characterization of loci fixation on model fit}
-
-The simulation diagnostic dotplots also clearly show that the loci
-under selection tend to get fixed at frequencies of 0 or 1 by the end
-of the simulation (\autoref{fixation-endpoints}). These data seem to
-violate the initial hypothesis that we are dealing with SNP data. That
-is, SNP discovery is generally performed on small ($<10$) numbers of
-individuals, so data from SNP microarrays is necessarily biased to
-favor loci which are polymorphic in these individuals. This phenomenon
-is called the ``ascertainment bias'' in the literature.
-
-To characterize if the model estimates are sensitive to the
-ascertainment bias, we fit several models using non-fixed subsets of
-the loci. The criteria used for calling a locus ``fixed'' are as
-follows:
-\begin{description}
-\item[not.all.fixed] Throw out the locus if all subpopulations fixed
-  (more stringent criterion; less loci will be ``fixed'').
-\item[none.fixed] Throw out the locus if one or more subpopulations
-  fixed (less stringent criterion; more loci will be ``fixed'').
-\end{description}
-
-To evaluate the effect of throwing out these loci on the total number
-of loci left for input to the model, we made scatterplots of percent
-of loci ``not fixed'' versus selection strength $s_i$
-(\autoref{fixation-selection}). Essentially this told us that loci
-under strong positive selection tend to be the ones which get called
-``fixed'' and excluded from the model.
-
-\fig{fixation-selection}{Percent of loci left after throwing out
-  ``fixed'' loci, according to 2 criteria outlined in the text. Note
-  how loci under strong positive selection are the loci which get
-  excluded.}
-
-To examine if there are any large differences between model estimates
-when fixed data are not included, we made scatterplots of estimated
-versus simulated ancestral allele frequency $\pi_i$ values
-(\autoref{fixed}).
-
-\fig{fixed}{Scatterplots of estimated and simulated ancestral allele
-  frequency. The Nicholson model was fit for all loci, and 2 subsets
-  of loci which were ``not fixed'' (see text).}
-
-This plot indicates that the model fits are similar, regardless of the
-number of loci included in the dataset. We also compare simulations
-with large and small proportions of neutral loci. Note that the model
-estimates behave similarly regardless of the number of loci included
-in the model. Thus we conclude that the model estimates are robust
-against the exclusion of fixed loci and the amount of neutral loci.
-
-Thus we can conclude that no harm is done by leaving in the ``fixed''
-loci, and we proceed with the rest of our analyses using all of the
-simulated loci.
-
 \subsection{Simulation summaries using animations}
 
-To visualize 3 of the above simulation diagnostics at once, we made
-combined plots of allele frequency time series, ancestral estimates,
-and dotplots (\autoref{sim-summary-plot}). We link the plots by
-showing one locus over time in the upper left, and then highlight this
-same locus in the other 2 plots.
-
-\fig{sim-summary-plot}{Frame 80/100 of a statistical animation that
-  summarizes the evolution simulation. Note the time series plot for a
-  single locus in the upper left. That same locus is highlighted with
-  a circle in the upper right ancestral estimate plot, and with a
-  vertical line in the bottom dotplot.}
-
-To visualize the influence of the number of generations on each of
-these diagnostic plots, we used to the animation
-package \cite{animation} to create a series of plots, one for each
-generation. These images are put together and viewed in sequence to
-form a statistical animation that reveals the dependence on the number
-of generations. The animations can be viewed on the accompanying
-website:
+To visualize how the allele frequencies change over time, we made
+plots of allele frequency time series, ancestral estimates, and
+dotplots. Then we used to the animation package \cite{animation} to
+create a series of these plots, one for each generation. These images
+are put together and viewed in sequence to form a statistical
+animation that reveals how the populations evolve during the
+simulation. The animations can be viewed on the accompanying website:
 
 \url{http://nicholsonppp.r-forge.r-project.org/}
 
@@ -702,23 +386,13 @@ observed in nature, and 0.001 is as weak as if there was no selection
 at all.
 
 For each of these sets we first made density plots of PPP-value
-conditional on selection state for each $s_i$ value
-(\autoref{dens-several-s}, \autoref{dens-several-s-few},
-\autoref{dens-several-s-neu}).
+conditional on selection state for each $s_i$ value. The results for
+the usual simulation set are shown in \autoref{dens-several-s}.
 
 \fig[0.8]{dens-several-s}{Density estimates for PPP-values of each
   selection state, given data sets simulated with different selection
   strengths $s_i$. Note how it gets easier to distinguish selection as
   the selection strength parameter increases.}
-
-\fig[0.8]{dens-several-s-few}{Density estimates for PPP-values, for
-  only 4 populations. With fewer populations it is more difficult to
-  distinguish the behavior of loci under selection.}
-
-\fig[0.8]{dens-several-s-neu}{Density estimates for PPP-values, when
-  there is an abundance of neutral loci. In this case the densities
-  are clearly distinguishable, but the sheer number of neutral loci
-  makes a linear cutoff rule suboptimal.}
 
 These density plots clearly visualize the different distributions of
 PPP-values for different selection types. These plots suggest that low
@@ -743,95 +417,30 @@ These density plots also clearly show that increasing the value of the
 selection coefficient $s_i$ tends to increase the separation of
 distributions of PPP-values.
 
-Examining \autoref{dens-several-s-few}, we see that with fewer
-populations it is more difficult to distinguish the behavior of loci
-under selection.
-
-In \autoref{dens-several-s-neu}, we see that when there are very many
-neutral loci the densities of the different selection states are
-clearly distinguishable, but the sheer number of neutral loci makes a
-linear cutoff rule suboptimal. For every possible threshhold, there
-will be a large false positive rate.
-
-Then we evaluated false positive and false negative rates for each
-possible decision rule; that is, each possible cutoff for the
-PPP-value. We used lineplots to trace the true positive, false
-positive, false negative, and incorrect rates as a function of
-classifier cutoff value (\autoref{cutoff-plot},
-\autoref{cutoff-plot-few}, \autoref{cutoff-plot-neu}).
-
-\fig[0.8]{cutoff-plot}{Lineplots of true positive, false positive, and
-  false negative rates using the PPP-value classifier. Note the
-  optimal cutoffs are near 0.35, according to empirical risk
-  minimzation.}
-
-\fig[0.8]{cutoff-plot-few}{Lineplots of true positive, false positive,
-  and false negative rates using the PPP-value classifier on a data
-  set with few populations. Note that optimal cutoffs are near 0.4,
-  according to empirical risk minimization, but that only high
-  selection values $s_i$ are detected. Best values for incorrect
-  prediction are not as low as in the case where there are 12
-  populations.}
-
-\fig[0.8]{cutoff-plot-neu}{Lineplots of true positive, false positive,
-  and false negative rates using the PPP-value classifier on a data
-  set with many neutral loci. Note that with very many neutral
-  alleles, the rate of false positives ascends very quickly. In this
-  situation, the best cutoff value is around 0.2.}
-
-These plots are used to investigate the best choice of threshhold for
-the classifier in the simulations. We define the best threshhold $h^*$
-as the one which minimizes the empirical risk:
-$$
-h^* = \stackrel{
-  {\textstyle \text{argmin}}}{
-  {\scriptstyle h\in\{0,1\}}}
-P(\hat{S}_{i}(h)\neq S_i)
-$$
-where $S_i$ is the actual selection state for locus $i$.
-
-To identify the threshhold values of empirical risk minimization, we
-traced a horizontal grey line on the minimum value of the incorrect
-curve, and identified the corresponding threshhold value with a
-vertical grey line.
+We found that with fewer populations it is more difficult to
+distinguish the behavior of loci under selection. When we examined the
+simulation with very many neutral loci, we saw that the densities of
+the different selection states are clearly distinguishable. However,
+the sheer number of neutral loci makes for a large false positive
+rate.
 
 Receiver operating characteristics (ROCs) were also traced, to compare
-all 15 simulations at the same time (\autoref{roc-desc},
-\autoref{roc-s}). In ROCs, we plot lines of sensitivity against
-$1-\text{specificity}$ for every possible threshhold value of the
-classifier, where sensitivity is the true positive rate and
-specificity is the false positive rate.
+all 15 simulations at the same time (\autoref{roc-desc}). In ROCs, we
+plot lines of sensitivity against $1-\text{specificity}$ for every
+possible threshhold value of the classifier, where sensitivity is the
+true positive rate and specificity is the false positive rate.
 
 \fig{roc-desc}{ROCs for several selection strengths, neutral allele
   concentrations, and population numbers. As shown in the
   densityplots, increasing selection strengths $s_i$ tend to increase
   the area under the curve.}
 
-\fig[0.8]{roc-s}{ROCs for several selection strengths, neutral allele
-  concentrations, and population numbers. Note how the data sets with
-  4 populations generate decision rules which are noticeably less
-  powerful than those in the other 2 simulations.}
-
 The ROCs in \autoref{roc-desc} show that increasing selection
 strengths $s_i$ tend to increase the area under the curve. This
 indicates that loci under stronger selection are easier to distinguish
-from loci not under selection.
-
-In \autoref{roc-s}, note how the data sets with 4 populations generate
-decision rules which are noticeably less powerful than those in the
-other 2 simulations.
-
-Additionally, ROCs were traced for 9 simulations comprising a cross of
-3x3 parameter values: 25, 50, and 100 generations; 4, 8, 12
-populations (\autoref{gen-pop-roc}).
-
-\fig{gen-pop-roc}{ROCs show slight dependence of the PPP-value
-  classifier on number of populations and generations. It is more
-  difficult to accurately predict selection state for a smaller number
-  of generations and populations.}
-
-These ROCs suggest that it is more difficult to accurately predict
-selection state for a smaller number of generations and populations.
+from loci not under selection. Also, note how the data sets with 4
+populations generate decision rules which are noticeably less powerful
+than those in the other 2 simulations.
 
 \section{Conclusions and future work}
 
@@ -899,26 +508,6 @@ simulations suggest that we will be able to accurately identify loci
 under strong selection using this method.
 
 \section{Acknowledgements}
-
-Jean-Louis Foulley and Mathieu Gautier are responsible for the initial
-development of using PPP-values in the Nicholson model for a selection
-state classifier \cite{foulley-gautier}.
-
-Mathieu Gautier was responsible for the initial implementation of the
-Nicholson model in FORTRAN. The code used to fit the model in the R
-package \texttt{nicholsonppp} was adapted from his code.
-
-I thank my principal advisor, Mathieu Gautier, for his insightful
-advice and guidance on this project. I also thank my secondary
-advisor, Jean-Louis Foulley, for theoretical insights into Bayesian
-statistics, and in particular, the derivation of the variance used in
-PPP-value calculations.
-
-The research groups of G\'en\'etique Animale et Biologie Int\'egrative
-(GABI) and Population, Statistique et G\'enome (PSGen) at l'Institut
-National de la Recherche Agronomique (INRA) in Jouy-en-Josas
-graciously provided office space and computing resources for this
-project.
 
 Thanks to Gilles Celeux of the SELECT laboratory of the Institut
 National de Recherche en Informatique et en Automatique (INRIA), who
