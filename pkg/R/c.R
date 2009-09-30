@@ -27,9 +27,14 @@ estc.df <- function
   cc$type <- factor("simulated")
   add.level <- function(popsize){
     denom <- popsize
-    rbind(cc,data.frame(population=factor(paste("g/",denom,sep="")),
-                        generation=g,c.est=g/denom,popsize=popsize,
-                        type=factor("theoretical")))
+    rbind(cc,
+          data.frame(population=factor(paste("g/",denom,sep="")),
+                     generation=g,c.est=g/denom,popsize=popsize,
+                     type=factor("approx")),
+          data.frame(population=factor(paste("gg/",denom,sep="")),
+                     generation=g,c.est=1-(1-1/denom)^g,popsize=popsize,
+                     type=factor("theoretical"))
+          )
   }
   for(ps in unique(cc$popsize))cc <- add.level(ps)
   cc
