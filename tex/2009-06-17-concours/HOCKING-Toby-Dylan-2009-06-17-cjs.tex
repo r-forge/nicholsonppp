@@ -1,5 +1,4 @@
 \documentclass{beamer}
-\usepackage{TDH-macros}
 \usepackage{graphicx}
 
 \newcommand{\neff}{\text{popsize}}
@@ -226,8 +225,8 @@ $$\aij = \frac{
 \item \textbf{population differentiation prior $c_j\sim U[0,1]$}
 \item Monte Carlo Markov Chain sampling: \includegraphics[width=0.2\textwidth]{nicholson-model}
 \begin{enumerate}
-\item $\alpha^t = P(\alpha|c^{t-1},\pi^{t-1},x)$
-\item $\pi^t = P(\pi|c^{t-1},\alpha^t,a)$
+\item $\alpha^t \beta_k \gamma_h = P(\alpha|c^{t-1},\pi^{t-1},x)$
+\item $\pi^t = P(\pi|c^{t-1+h},\alpha^t,a)$
 \item $c^t = P(c|\pi^t,\alpha^t)$
 \end{enumerate}
 \item Implemented using a Gibbs sampler in a FORTRAN program.
