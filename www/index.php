@@ -49,8 +49,9 @@ echo $contents; } ?>
 following commands in R:</p>
 
 <pre>
-install.packages("animation","ggplot2") # for dependencies on CRAN
+install.packages(c("animation","ggplot2")) # for dependencies on CRAN
 install.packages("nicholsonppp", repos="http://R-Forge.R-project.org")
+library(nicholsonppp)
 sim <- sim.drift.selection()
 df <- sim2df(sim)
 ## Plot 6 loci evolving over time:
