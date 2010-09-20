@@ -90,7 +90,7 @@ evolution.animation(df)
 
 <p>The package has been compiled successfully using gfortran and
 ifort. We prefer using ifort when possible, since it makes the program
-run about 10x faster. To use ifort with R you have to recompile
+run faster. To use ifort with R you have to recompile
 R. Download the sources then do:</p>
 
 <pre>
