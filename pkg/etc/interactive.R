@@ -66,3 +66,14 @@ Selector$select <- function(self,...){
   to.select <- select.data == value
   self$selected <- self$data[to.select,]
 }
+
+## example of how to do animation and interactivity at the same time.
+library(qtbase)
+b <- Qt$QPushButton("something")
+qconnect(b,"pressed",function()print("foo"))
+b$show()
+a <- Qt$QPropertyAnimation(b,"geometry")
+a$setDuration(10000)
+a$setStartValue(Qt$QRect(0,0,100,30))
+a$setEndValue(Qt$QRect(250,250,100,30))
+a$start()
