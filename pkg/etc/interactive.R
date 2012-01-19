@@ -21,6 +21,18 @@ ihist(ppp)
 library(rggobi)
 g <- ggobi(d)
 
+## example of how to do animation and interactivity at the same time.
+library(qtbase)
+b <- Qt$QPushButton("something")
+qconnect(b,"pressed",function()print("foo"))
+b$show()
+a <- Qt$QPropertyAnimation(b,"geometry")
+a$setDuration(10000)
+a$setStartValue(Qt$QRect(0,0,100,30))
+a$setEndValue(Qt$QRect(250,250,100,30))
+a$start()
+
+
 
 ## what I would like to write to implement an animation with custom
 ## interaction that updates the selected locus in each panel
@@ -67,13 +79,19 @@ Selector$select <- function(self,...){
   self$selected <- self$data[to.select,]
 }
 
-## example of how to do animation and interactivity at the same time.
-library(qtbase)
-b <- Qt$QPushButton("something")
-qconnect(b,"pressed",function()print("foo"))
-b$show()
-a <- Qt$QPropertyAnimation(b,"geometry")
-a$setDuration(10000)
-a$setStartValue(Qt$QRect(0,0,100,30))
-a$setEndValue(Qt$QRect(250,250,100,30))
-a$start()
+## it would have been nice to write this to implement the
+## breakpoint/copies annotator that took 400 lines of python code
+ggplot()+
+  aes(position,logratio)+
+  geom_point(aes(colour=copies,fill=annotation),data=profiles,
+             onClick=cycleAnnotation)+
+  geom_tallrect(aes(fill=annotation),ymin=0.5,ymax=1,data=copies,
+                onClick=cycleDeleteAnn)+
+  geom_tallrect(aes(fill=annotation),ymin=0,ymax=0.5,data=breakpoints,
+                onClick=cycleDeleteAnn)+
+  facet_grid(profile_id~chromosome)+
+  interaction(ymin=0.5,ymax=1,onDrag=TallRectangle,
+              onRelease=copies$add_row)+
+  interaction(ymin=0,ymax=0.5,onDrag=TallRectangle,
+              onRelease=breakpoints$add_row)+
+  interaction(rightClick=exchangeProfile)
