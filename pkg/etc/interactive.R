@@ -95,3 +95,66 @@ ggplot()+
   interaction(ymin=0,ymax=0.5,onDrag=TallRectangle,
               onRelease=breakpoints$add_row)+
   interaction(rightClick=exchangeProfile)
+
+## again, with the annotated copy number profiles, it would be nice to
+## have 1 plot of error curves linked to a plot of the smoothing
+## model... i.e. click the profiles to add annotations, which get used
+## to construct the error curves. Click the error curve to update the
+## smoothing model, superimposed on the profiles.
+## dimensions: profiles, chromosomes, parameters, positions
+DataSet <- proto(.,{
+  select
+  insert
+  update
+  delete
+})
+Geom <- proto(.,{
+  on_click
+})
+## parameters is a table with columns id, parameter, error
+selected_parameter <- Selector(parameters,id)
+makeAnnotation <- list(dragging=function(x.begin,x.now,...){
+  resize_tallrect(x.begin,x.now)
+},mouseUp=function(x.begin,x.now,chromosome,profile_id,...){
+  beg <- to_position(x.begin)
+  end <- to_position(x.now)
+  m <- min(beg,end)
+  M <- max(beg,end)
+  annotations$insert(profile_id,chromosome,m,M,"breakpoint")
+  ## insert function should look for attached plots and send them
+  ## update signals
+  region <- smooth$select(profile_id,chromosome,m,M)
+  for(p in unique(region$parameter)){
+    region.smooth <- subset(region,parameter==p)
+    ## store agreement for this region somewhere
+    parameters$update() ## update for each parameter
+  }
+})
+cycleAnnotation <- function(geom,...){
+  geom$table ## should be a link to the dataset
+  current_ann <- geom$get("annotation")
+  if(current_ann%in%names(next_annotation)){
+    geom$update(next_annotation[current_ann])
+  }else{
+    geom$delete()
+  }
+}
+profile_plot <- ggplot()+
+  facet_grid(profile_id~chromosome)+
+  geom_point(aes(position,logratio),data=probes)+
+  geom_line(aes(position,smooth),data=smooth)+
+  geom_tallrect(aes(min=min,max=max),data=annotations,
+                interactions=list(click=cycleAnnotation))+
+  interactions(drag=makeAnnotation)
+error_plot <- ggplot()+
+  geom_line(aes(log10(parameter),error),data=parameters)+
+  geom_vline(aes(xintercept=parameter),data=selected_parameter)+
+  interactions(click=selected_parameter$select)
+## then plot them both... start with no model hilited, no annotations,
+## flat error curve. then drag the profile to add annotations, and the
+## error curve should get updated. makeAnnotation must send a signal
+## to update the error column to the parameters data table, which is
+## now linked to the error curve geom_line. Then click the error curve
+## to set a vertical line, highlighting a model parameter, and sending
+## a signal to the smooth data set, which in turn updates the drawn
+## lines...
