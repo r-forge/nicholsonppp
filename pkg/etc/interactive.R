@@ -27,11 +27,15 @@ b <- Qt$QPushButton("something")
 qconnect(b,"pressed",function()print("foo"))
 b$show()
 a <- Qt$QPropertyAnimation(b,"geometry")
-a$setDuration(10000)
-a$setStartValue(Qt$QRect(0,0,100,30))
-a$setEndValue(Qt$QRect(250,250,100,30))
+a$setDuration(20000)
+width <- 100
+height <- 30
+x <- 830
+y <- 200
+a$setStartValue(Qt$QRect(x,y,width,height))
+a$setEndValue(Qt$QRect(x+250,y+250,width+100,height+100))
 a$start()
-
+a
 
 
 ## what I would like to write to implement an animation with custom
